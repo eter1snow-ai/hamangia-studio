@@ -1,232 +1,159 @@
-# MASTER FILE — HeavenlyNova Streetwear (HVN)
-> **Sursa Unică de Adevăr** pentru sesiuni viitoare de dezvoltare.
-> Actualizat: **2 septembrie 2026**
+# MASTER FILE — HAMANGIA STUDIO (`hamangiastudio.ro`)
+> **Sursa Unică de Adevăr (Single Source of Truth)** pentru dezvoltarea, arhitectura și operarea brandului HAMANGIA.  
+> Ultima actualizare: **Octombrie 2026**  
+> Status Proiect: **LIVE pe Vercel (`https://hamangia-studio.vercel.app`) & În curs de mapare pe domeniul final `hamangiastudio.ro`**
 
 ---
 
 ## 1. Ce Este Acest Proiect
 
-HeavenlyNova (HVN) este un brand de streetwear heavyweight independent.
-Site-ul este un e-commerce SPA complet, cu integrare Shopify (sau mock data).
+**HAMANGIA** este un brand independent de streetwear heavyweight creat exclusiv pentru piața din România.  
+Proiectul combină o estetică brutalistă, inspirată din gravura medievală în lemn (*woodcut / etching*) și simetriile arhaice ale culturii neolitice/chilimurilor românești vechi, cu siluete moderne urbane (Boxy Oversized din bumbac greu de 240 GSM).
 
-**URL Live:** (Vercel — deploy din main)
-**Repo:** `eter1snow-ai/heavenlynova-streetwear`
-**Deployment:** Vercel (auto-deploy din GitHub `main`)
-
----
-
-## 2. Tech Stack
-
-`
-React 19 + Vite 7 + TypeScript 5.9
-Tailwind CSS 4 (@tailwindcss/postcss)
-React Router DOM 7
-Framer Motion 12 (animații page transitions + UI)
-Nodemailer 8 (contact form, returns — API functions)
-Sharp 0.34 (procesare imagini server-side)
-`
-
-**Build command:** `tsc -b && vite build`
-**Dev:** `npm run dev` → `localhost:5173`
+* **Domeniu Oficial:** `https://hamangiastudio.ro` (înregistrat pe Zooku)
+* **Găzduire Producție:** Vercel (`sabie-tudors-projects/hamangia-studio`)
+* **URL Live Vercel:** [https://hamangia-studio.vercel.app](https://hamangia-studio.vercel.app)
+* **Cost Fix de Operare:** **0 Lei / lună** (Free Tier Vercel, Supabase, Resend, Zooku DNS)
 
 ---
 
-## 3. Arhitectura & Rute
+## 2. Viziunea și Identitatea Brandului
 
-Router: `BrowserRouter` cu `AnimatePresence` (Framer Motion) pentru page transitions.
-Fiecare pagina este înfășurată în `<MotionPage>` cu fade-in/out 0.4s.
-
-### Rute Definite (src/App.tsx)
-
-| Rută | Componenta | Notă |
-|------|-----------|------|
-| / | Home.tsx | Landing principal |
-| /drops | Drops.tsx | Toate produsele |
-| /story | Story.tsx | Chapter 000 — The First Signal |
-| /heritage | Heritage.tsx | Colecția Heritage |
-| /essentials | Essentials.tsx | Colecția Essentials |
-| /seraphim | Seraphim.tsx | Chapter 001 — noindex! |
-| /join | Join.tsx | Email capture / waitlist |
-| /contact | Contact.tsx | Formular contact |
-| /track-order | TrackOrder.tsx | Tracking comandă |
-| /product/:productId | ProductDetail.tsx | Pagina produs (SEO intern) |
-| /privacy-policy | PrivacyPolicy.tsx | — |
-| /terms-of-service | TermsOfService.tsx | — |
-| /shipping-policy | ShippingPolicy.tsx | — |
-| /refund-policy | RefundPolicy.tsx | — |
-
-### Layout Global (src/App.tsx)
-
-`Navbar` + `AnimatedRoutes` + `Footer` înfășurate în:
-- `CartProvider` (context global coș)
-- `EmailCapture` (popup/banner email)
-- `CookieBanner`
-- `CartDrawer` (side drawer coș)
-- `bg-black text-white` pe tot site-ul
+### 2.1. Reguli Cardinali de Naming & Design
+1. **Nume Oficial:** **HAMANGIA** (FĂRĂ particula „Traditional” în nume — termenul „Traditional” este interzis ca brand, putând fi folosit doar ca sub-titlu de colecție tip *Expedition to the Roots*).
+2. **Zero Kitsch Naționalist:**
+   * ❌ Fără steag tricolor (roșu-galben-albastru).
+   * ❌ Fără text strident „ROMANIA” sau elemente de suvenir turistic ieftin.
+   * ✔️ Arta trebuie să funcționeze curat, minimalist, brutalist, monocrom sau în tonuri de negru spălat, cărbune și fildeș vintage.
+3. **Calitate Blanks:**
+   * Exclusiv bumbac greu de **240 GSM** (100% bumbac pieptănat sau pre-shrunk).
+   * Croială boxy / oversized fit, guler strâns întărit, umeri căzuți. Fără tricouri subțiri promoționale de 140–150g.
+4. **Tehnologie de Producție (Fulfillment Local):**
+   * Print DTF (Direct to Film) de înaltă definiție la **300 DPI** printr-un atelier partener din România.
+   * Timp de livrare de **24–48h** în toată România prin Sameday Easybox și curier.
 
 ---
 
-## 4. Produse & Date
+## 3. Tech Stack
 
-### src/data/drops.ts
+* **Frontend:** React 19 + Vite 7 + TypeScript 5.9
+* **Styling:** Tailwind CSS 4 (@tailwindcss/postcss)
+* **Routing & Animații:** React Router DOM 7 + Framer Motion 12 (tranzacții fluide între pagini cu `<MotionPage>`)
+* **Email & Notificări:** Resend API (pachetul oficial `resend`) — trimitere notificări contact și comenzi direct în Gmail personal, **zero costuri cu servere de mail**
+* **Plăți:** Stripe (Checkout Session în valuta `ron` / bani) + Opțiune Plată Ramburs (Cash on Delivery)
+* **Bază de date:** Supabase (PostgreSQL — EU Central / Frankfurt)
+* **Găzduire & CDN:** Vercel Hobby Plan (SSL gratuit Let's Encrypt, Anycast CDN global, Serverless Functions)
 
-Fișierul principal de date produse. Structura unui produs:
-
-`	ypescript
-type Product = {
-  id: string              // ex: 'broken-001', 'soulfull-black'
-  category: Category      // 'flagship' | 'individuals' | 'essentials' | 'origin'
-  productType: ProductType // 'tee' | 'hoodie'
-  name: string
-  tagline: string
-  description: string
-  price: string           // ex: '59.99€'
-  images: string[]        // căi relative la /public/Assets/Images/Preview/
-}
-`
-
-### Produse Actuale
-
-| ID | Nume | Tip | Categorie | Preț |
-|----|------|-----|-----------|------|
-| broken-001 | BROKEN // 001 | tee | flagship | 59.99€ |
-| soulfull-black | SOULFULL — BLACK | tee | individuals | 59.99€ |
-| core-hoodie-white | (Core Hoodie White) | hoodie | essentials | — |
-| ... | ... | ... | ... | ... |
-
-### Mod Date (Feature Flag)
-
-`VITE_USE_MOCK_DATA=true` → folosește `src/data/drops.ts` (offline, fara Shopify)
-`VITE_USE_MOCK_DATA=false` → folosește Shopify Storefront API live
+```bash
+# Comenzi principale
+npm run dev        # Pornește serverul local de dezvoltare (port 3001)
+npm run build      # tsc -b && vite build (validare TypeScript + bundling producție)
+vercel --prod      # Deploy direct în producție pe Vercel
+```
 
 ---
 
-## 5. Integrare Shopify (când e activă)
+## 4. Arhitectura de Limbi (RO Primar / EN Secundar)
 
-| Variabilă ENV | Valoare |
-|--------------|---------|
-| VITE_SHOPIFY_STORE_DOMAIN | your-store.myshopify.com |
-| VITE_SHOPIFY_STOREFRONT_TOKEN | (Storefront Access Token public) |
-| VITE_USE_MOCK_DATA | true (mock) / false (live Shopify) |
-
----
-
-## 6. API Functions (Vercel Serverless — /api/)
-
-| Endpoint | Fișier | Rol |
-|----------|--------|-----|
-| POST /api/contact | api/contact.js | Trimite e-mail contact via Nodemailer |
-| POST /api/returns | api/returns.js | Procesare cereri retur |
-| POST /api/subscribe | api/subscribe.js | Abonare email/newsletter |
-
-Toate folosesc Nodemailer pentru trimitere e-mail.
+Site-ul a fost proiectat cu **Româna ca limbă mamă** (`ro` este limba implicită), păstrând Engleza (`en`) ca limbă secundară:
+* Toate textele, meniurile, produsele, filtrele și politicile legale sunt traduse 100% bilingv.
+* Switcher-ul din Navbar oferă selecția rapidă `RO | EN`.
+* Traducerile sunt organizate modular în:
+  * `src/context/LanguageContext.tsx` — dicționarul global (navigație, butoane, footer, mesaje coș)
+  * `src/data/productTranslations.ts` — descrieri și tagline-uri pentru produsele HAMANGIA
+  * `src/data/collectionTranslations.ts` — textele specifice colecțiilor (*To the Roots, Esențiale, Lansări*)
+  * `src/data/storyTranslations.ts` — manifestul de brand HAMANGIA
 
 ---
 
-## 7. Structura Componentelor
+## 5. Rute Definite & Structură Navigație (`src/App.tsx`)
 
-`
-src/
-├── App.tsx                     # Router + layout global + SEO per rută
-├── data/drops.ts               # Date produse (mock)
-├── pages/
-│   ├── Home.tsx                # Landing (9434 bytes)
-│   ├── ProductDetail.tsx       # Pagina produs + SEO intern (21424 bytes)
-│   ├── Drops.tsx               # Grid produse
-│   ├── Story.tsx               # Poveste brand (12431 bytes)
-│   ├── Heritage.tsx / Essentials.tsx / Seraphim.tsx
-│   ├── Contact.tsx             # Formular contact
-│   ├── Join.tsx                # Email waitlist
-│   ├── TrackOrder.tsx          # Tracking
-│   └── [Policy pages...]
-├── components/
-│   ├── cart/
-│   │   ├── CartContext.tsx     # Context global coș (React Context API)
-│   │   └── CartDrawer.tsx     # Side drawer animat
-│   ├── layout/
-│   │   ├── Navbar.tsx         # Navigare + cart icon
-│   │   └── Footer.tsx         # Footer global
-│   ├── home/                  # Componente specifice Home
-│   └── shared/
-│       ├── EmailCapture.tsx   # Popup/banner captare email
-│       └── CookieBanner.tsx   # GDPR cookie consent
-├── hooks/
-│   └── useSEO.ts              # applySEO() — injecție canonical + meta dinamică
-└── lib/                       # Utilitare
-`
+| Rută | Componentă | Descriere & Notă |
+|---|---|---|
+| `/` | `Home.tsx` | Hero Woodcut, Showcase Rail, Piesa Erou, Grid Piese, Manifest, Newsletter |
+| `/drops` | `Drops.tsx` | Colecția Arhaică completă cu filtre (Toate / Tricouri / Hanorace) |
+| `/roots` / `/heritage` | `Heritage.tsx` | *To the Roots* — Piesele de linie arhaice și gravură medievală |
+| `/essentials` | `Essentials.tsx` | *Esențiale* — Piese minimale și chilimuri |
+| `/story` | `Story.tsx` | *Originea* — Manifestul HAMANGIA (simbolism neolitic, gravură, bumbac 240g) |
+| `/product/:productId` | `ProductDetail.tsx` | Pagină detaliu produs cu selector mărimi, ghid mărimi și checkout Stripe RON |
+| `/contact` | `Contact.tsx` | Formular conectat la Resend API (mesajele ajung instant în Gmail) |
+| `/track-order` | `TrackOrder.tsx` | Ghid de urmărire expediție Sameday Easybox (AWB) |
+| `/join` | `Join.tsx` | Înrolare în cercul privat HAMANGIA pentru tiraje scurte |
+| `/order-success` | `OrderSuccess.tsx` | Pagină de confirmare comandă plasată (Stripe / Ramburs) |
+| `/shipping-policy` | `ShippingPolicy.tsx` | Politică de livrare 24-48h Sameday Easybox & Curier |
+| `/refund-policy` | `RefundPolicy.tsx` | Politică de retur în 14 zile conform OUG 34/2014 |
+| `/privacy-policy` | `PrivacyPolicy.tsx` | Politică de confidențialitate și protecție date GDPR |
+| `/terms-of-service` | `TermsOfService.tsx` | Termeni și condiții de vânzare adaptate la legislația din România |
+| `/seraphim` | `<Drops />` | Rută retrasă / redirecționată elegant către Drops |
 
 ---
 
-## 8. Design System & Identitate Brand
+## 6. Catalog Produse (Drop 01 // Expedition to the Roots)
 
-### Principii Vizuale
-
-- Fundal: **negru pur** (`bg-black`) pe tot site-ul
-- Text: **alb** (`text-white`) ca bază
-- Tipografie: uppercase, spațiere largă (`letter-spacing`)
-- Estetică: minimalistă, heavy, dark — fără culori stridente
-- Animații: fade page transitions 0.4s via Framer Motion
-
-### Tailwind Config
-
-Fișier: `tailwind.config.ts` — customizat cu clase HVN-specifice (`hn-radius-0` etc.)
-
-### Clase CSS Personalizate
-
-`hn-radius-0` — pe containerul principal (border-radius 0 peste tot)
+| ID Produs | Nume Produs | Preț | Material | Tehnologie Print |
+|---|---|---|---|---|
+| `cavalerul-woodcut` | **Cavalerul / Sf. Gheorghe (Woodcut Heavy Tee)** | **189 RON** | 240 GSM Heavy Cotton | DTF 300 DPI — Gravură Medievală |
+| `chilim-cocos-white` | **Chilim Geometric Cocos - Vintage White** | **169 RON** | 240 GSM Heavy Cotton | DTF 300 DPI — Simetrie Arhaică Fildeș |
+| `chilim-cocos-black` | **Chilim Geometric Cocos - Washed Black** | **169 RON** | 240 GSM Heavy Cotton | DTF 300 DPI — Simetrie Negru Spălat |
+| `angel-wings-black` | **Angel Wings - Oversized Black** | **169 RON** | 240 GSM Heavy Cotton | DTF 300 DPI — Aripi Heraldice Woodcut |
+| `horizon-roots-tee` | **Horizon Roots Tee** | **149 RON** | 240 GSM Heavy Cotton | DTF 300 DPI — Simbolism Ancestral |
 
 ---
 
-## 9. SEO
+## 7. Configurare DNS & Email (Zooku + Vercel + Resend)
 
-- SEO per rută: `applySEO()` din `src/hooks/useSEO.ts`
-- Canonical tags dinamic injectate per path
-- `/seraphim` are `noindex: true` (pagina secretă/teaser)
-- Paginile de produs (`/product/:id`) gestionează SEO intern în `ProductDetail.tsx`
+> **ZERO CLOUDFLARE:** Domeniul este administrat direct în **Zooku DNS Gratuit**, site-ul și SSL-ul sunt găzduite pe **Vercel**, iar emailurile pleacă prin **Resend API**.
 
----
-
-## 10. Backlog / TODO Curent
-
-Din TODO.md:
-- [ ] Hero.tsx: Add mobile pt-[80px] md:pt-0, object-contain image
-- [ ] Footer.tsx: Remove 'The Origin' link
-- [ ] Verificare deploy Vercel pe iPhone (mobile-first)
-
----
-
-## 11. Reguli Critice pentru Sesiunile Viitoare AI
-
-1. Site-ul este complet negru (bg-black). Nu adăuga culori de fundal deschise fără aprobare.
-2. VITE_USE_MOCK_DATA controlează sursa produselor. Când e true, nu se face niciun call Shopify.
-3. CartContext este global — nu instanția CartProvider în componente individuale.
-4. /seraphim este o pagina NOINDEX — nu o adăuga în sitemap dacă generezi unul.
-5. ProductDetail.tsx gestionează SEO propriu (useSEO hook intern) — nu suprascrie din App.tsx.
-6. Framer Motion AnimatePresence — key-ul pe Routes este location.pathname. Nu schimba asta.
-7. Page transitions sunt 0.4s fade. Nu elimina AnimatePresence sau MotionPage.
-8. Imaginile sunt în /public/Assets/Images/Preview/ — căi relative, nu absolute cu domeniu.
-9. Build: tsc -b && vite build. Spre deosebire de landing-ui, NU există prerender script.
+### Înregistrări DNS de introdus în panoul Zooku:
+1. **Site Web (Vercel):**
+   * `A` record pe `@` ➔ `76.76.21.21`
+   * `CNAME` record pe `www` ➔ `cname.vercel-dns.com`
+2. **Anti-Spam Obligatoriu:**
+   * `TXT` record pe `_dmarc` ➔ `v=DMARC1; p=none; rua=mailto:contact@hamangiastudio.ro`
+3. **Resend (Expediere Emailuri fără căsuță plătită):**
+   * `TXT` record pe `resend._domainkey` ➔ Cheia DKIM generată în Resend
+   * `MX` record pe `bounces` ➔ `feedback-smtp.eu-west-1.amazonses.com` (prioritate 10)
+   * `TXT` record pe `bounces` ➔ `v=spf1 include:amazonses.com ~all`
 
 ---
 
-## 12. Arhitectura de Fulfillment & Sincronizare (Headless vs Etsy)
+## 8. Variabile de Mediu (`.env.local` / Vercel Environment Variables)
 
-### 12.1 Headless Storefront (`heavenlynova.com`)
-* **Single Listing + Rutare Dinamică:** Clientul vede un singur produs per design.
-* **Webhook Stripe (`api/stripe-webhook.js`):** La `checkout.session.completed`, citește `shipping_address.country`:
-  - **US / CA:** Comandă automat varianta **US** (Shaka Wear Max Heavyweight / Lane Seven).
-  - **EU / RO / International:** Comandă automat varianta **EU** (Build Your Brand BY102 / Stanley/Stella).
-* **Transport:** Inclus în preț (Free Shipping pe site prin Stripe).
+```env
+# Domeniu & URL
+SITE_URL=https://hamangiastudio.ro
 
-### 12.2 Etsy Storefront (`HeavenlyNovaApparel`)
-* **Dual-Listing per Design:** `[US Edition]` și `[EU Edition]` separate.
-  - *Motiv tehnic:* Printify Order Routing nu permite înlocuirea automată a două Blueprint-uri complet diferite (Shaka Wear vs BY102 au croieli, GSM, mărimi și ID-uri de catalog diferite).
-* **Insigna verde „FREE delivery” pe Etsy:** Activată prin setarea costului de livrare la **`0.00`** direct în **Etsy Delivery Settings**.
-* **Mapare Profile de Livrare (Etsy Delivery Profiles):**
-  1. `[US-FL] Shaka Wear Heavyweight T-Shirt` (Zip: 33014 – Florida, US): US `Free Delivery` (`0.00 €`), Canada `4.85 €`.
-  2. `[DE-06] Build Your Brand BY102 T-Shirt` (Zip: 06112 – Textildruck Halle, Germania): EU `Free Delivery` (`0.00 €`). US & Everywhere Else restricționate/blocate.
-  3. `[CZ-10] Stanley/Stella Premium Hoodie` (Zip: CZ10000 – OPT OnDemand Praga, Cehia): EU `Free Delivery` (`0.00 €`). Restricționat Non-UE.
-  4. `[US-FL] Lane Seven Heavyweight Hoodie` (Zip: 33014 – Florida, US): US `Free Delivery` (`0.00 €`).
-* **Directivă critică la republicare din Printify:** Când se actualizează descrieri, tags sau grafică din Printify, **se debifează căsuța „Shipping profile” la Publish**, pentru a preveni suprascrierea setărilor manuale de Free Delivery de pe Etsy cu valorile implicite din Printify.
-* **Smart Routing Manual (Failsafe):** Comenzile din Printify au fereastră de aprobare manuală (24h). Dacă un client european comandă din greșeală ediția de US, comanda se editează manual în Printify (`Edit order -> Replace item` pe BY102) înainte de producție.
+# Resend API (Notificări & Formular Contact)
+RESEND_API_KEY=re_xxxxxxxxxxxxxx
+EMAIL_FROM="HAMANGIA Studio <contact@hamangiastudio.ro>"
+NOTIFICATION_EMAIL=adresa_ta_personala@gmail.com
+WORKSHOP_EMAIL=atelier-print-local@hamangiastudio.ro
 
+# Stripe (Plăți Card - Valuta RON)
+VITE_STRIPE_PUBLISHABLE_KEY=pk_live_xxxxxxxxxxxxxx
+STRIPE_SECRET_KEY=sk_live_xxxxxxxxxxxxxx
+STRIPE_WEBHOOK_SECRET=whsec_xxxxxxxxxxxxxx
+
+# Supabase (Catalog, Comenzi & Inventar)
+VITE_SUPABASE_URL=https://xxxxxxxxx.supabase.co
+VITE_SUPABASE_ANON_KEY=eyJxxxxxxxxxx
+SUPABASE_SERVICE_ROLE_KEY=eyJxxxxxxxxxx
+
+# Oblio API (Facturare Automată & SPV ANAF)
+OBLIO_EMAIL=contact@hamangiastudio.ro
+OBLIO_API_KEY=xxxxxxxxxxxxxx
+OBLIO_CIF=ROxxxxxxxx
+OBLIO_SERIE_FACTURA=HMN
+
+# Sameday Easybox
+SAMEDAY_API_USERNAME=user_sameday
+SAMEDAY_API_PASSWORD=parola_sameday
+SAMEDAY_ENV=live
+```
+
+---
+
+## 9. Contact & Mentenanță
+* **Organizație GitHub:** `eter1snow-ai`
+* **Repository GitHub:** `eter1snow-ai/hamangia-studio`
+* **Vercel Project:** `sabie-tudors-projects/hamangia-studio`
