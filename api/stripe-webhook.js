@@ -1,0 +1,1293 @@
+/**
+ * api/stripe-webhook.js
+ *
+ * Vercel Serverless Function — Stripe Webhook Handler
+ *
+ * Flux complet:
+ *   Stripe checkout.session.completed
+ *     → Verificare semnătură
+ *     → Extrage date comandă din metadata
+ *     → Rutare geografică: US → Shaka Wear | EU/RO → Stanley/Stella
+ *     → POST /v1/shops/{shop_id}/orders.json (Printify API)
+ *     → INSERT în Supabase orders (istoric comenzi)
+ *
+ * Variabile de mediu necesare (Vercel → Settings → Environment Variables):
+ *   STRIPE_SECRET_KEY        — sk_live_...
+ *   STRIPE_WEBHOOK_SECRET    — whsec_...
+ *   PRINTIFY_API_TOKEN       — eyJ... (JWT token din Printify Dashboard)
+ *   PRINTIFY_SHOP_ID         — ID-ul shop-ului din Printify Dashboard → My Stores
+ *   SUPABASE_URL             — https://xxxxx.supabase.co
+ *   SUPABASE_SERVICE_ROLE_KEY — eyJ... (service role key, NU anon)
+ *   SITE_URL                 — https://heavenlynova.com
+ */
+
+import Stripe from 'stripe'
+import { createClient } from '@supabase/supabase-js'
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_placeholder')
+
+// ─── Supabase client (server-side exclusiv) ───────────────────────────────────
+const supabase = createClient(
+  process.env.SUPABASE_URL || 'https://placeholder.supabase.co',
+  process.env.SUPABASE_SERVICE_ROLE_KEY || 'placeholder_key'
+)
+
+// ─── Printify config ──────────────────────────────────────────────────────────
+const PRINTIFY_API_BASE = 'https://api.printify.com/v1'
+const PRINTIFY_API_TOKEN = process.env.PRINTIFY_API_TOKEN || 'placeholder_token'
+const PRINTIFY_SHOP_ID = process.env.PRINTIFY_SHOP_ID || 'placeholder_shop_id'
+
+// ─── Mapare produse: HVN productId → Printify IDs ────────────────────────────
+//
+// Structura:
+//   productId (din drops.ts) → {
+//     us: { product_id, variants: { SIZE: variant_id } },  ← Shaka Wear (US)
+//     eu: { product_id, variants: { SIZE: variant_id } },  ← Stanley/Stella (EU/RO)
+//   }
+//
+// De completat din Printify Dashboard:
+//   1. Intră în Printify → My Products → (selectează produsul)
+//   2. URL-ul conține product_id: printify.com/app/shop/.../products/{product_id}
+//   3. Fiecare variantă (mărime) are un variant_id numeric în catalogul produsului
+//
+// TODO: Completează aceste ID-uri după ce creezi produsele în Printify
+
+const PRINTIFY_PRODUCT_MAP = {
+  'essentials-black': {
+    us: {
+      product_id: '6aae1606905b342a3c0d43c5',
+      skus: {
+        S:     '93498971001141875352',
+        M:     '23940223616866547957',
+        L:     '19487763733185097336',
+        XL:    '30825576690655714896',
+        XXL:   '21708063790067979334',
+        '2XL': '21708063790067979334',
+        '3XL': '75167445498081411786',
+      },
+      variants: {
+        XS: 117443, // Fallback la S dacă cineva selectează XS
+        S: 117443,
+        M: 117442,
+        L: 117441,
+        XL: 117444,
+        XXL: 117437,
+        '2XL': 117437,
+        '3XL': 117438,
+      },
+    },
+    eu: {
+      product_id: '6ab356f9aa5d8e79340ffd58',
+      skus: {
+        XS:    '31528702956291826255',
+        S:     '31528702956291826255',
+        M:     '20676607497834815972',
+        L:     '20952604585266264737',
+        XL:    '14982024763713697308',
+        XXL:   '29642284829795214926',
+        '2XL': '29642284829795214926',
+        '3XL': '25075513468268130567',
+      },
+      variants: {
+        XS: 112804,
+        S: 112804,
+        M: 112805,
+        L: 112806,
+        XL: 112807,
+        XXL: 112811,
+        '2XL': 112811,
+        '3XL': 112808,
+      },
+    },
+  },
+
+  'essentials-white': {
+    us: {
+      product_id: '6ab215744f698da18b01ae9c',
+      skus: {
+        XS:    '18581233163851154897',
+        S:     '18581233163851154897',
+        M:     '20794905367629038444',
+        L:     '11235262492114464475',
+        XL:    '10580120646408515653',
+        XXL:   '20080577147743050432',
+        '2XL': '20080577147743050432',
+      },
+      variants: {
+        XS: 117605,
+        S: 117605,
+        M: 117606,
+        L: 117607,
+        XL: 117608,
+        XXL: 117609,
+        '2XL': 117609,
+        '3XL': 117610,
+      },
+    },
+    eu: {
+      product_id: '6ab3578c7d5ed2acdf0b4588',
+      skus: {
+        XS:    '16042456317625955243',
+        S:     '16042456317625955243',
+        M:     '46225520301969160787',
+        L:     '18125072332187064405',
+        XL:    '29514490849239947593',
+        XXL:   '33906357770859809289',
+        '2XL': '33906357770859809289',
+        '3XL': '31101435871347134943',
+      },
+      variants: {
+        XS: 116303,
+        S: 116303,
+        M: 116304,
+        L: 116305,
+        XL: 116306,
+        XXL: 116307,
+        '2XL': 116307,
+        '3XL': 116308,
+      },
+    },
+  },
+
+  'core-hoodie-white': {
+    us: {
+      product_id: '6ab21b9a0b35462dc40afcef',
+      skus: {
+        XS:    '29957978381408847097',
+        S:     '29957978381408847097',
+        M:     '26363641898970912366',
+        L:     '23443437822660736820',
+        XL:    '21107475743743994691',
+        XXL:   '27407060959316543018',
+        '2XL': '27407060959316543018',
+        '3XL': '92366706173171220975',
+      },
+      variants: {
+        XS: 122974,
+        S: 122974,
+        M: 122967,
+        L: 122960,
+        XL: 122981,
+        XXL: 122946,
+        '2XL': 122946,
+        '3XL': 122953,
+      },
+    },
+    eu: {
+      product_id: '6ab35abb3162135b62017508',
+      skus: {
+        XXS:   '53217857830425462426',
+        XS:    '10131537300499143846',
+        S:     '76878915596090047870',
+        M:     '16124782577499022153',
+        L:     '15019336011386976321',
+        XL:    '13533879961654270381',
+        XXL:   '26572515677947358479',
+        '2XL': '26572515677947358479',
+        '3XL': '10690478594364583191',
+      },
+      variants: {
+        XXS: 111238,
+        XS: 111238,
+        S: 111238,
+        M: 111243,
+        L: 111248,
+        XL: 111253,
+        XXL: 111258,
+        '2XL': 111258,
+        '3XL': 111263,
+      },
+    },
+  },
+
+  'core-hoodie': {
+    us: {
+      product_id: '6ab21b9a0b35462dc40afcef',
+      skus: {
+        XS:    '29957978381408847097',
+        S:     '29957978381408847097',
+        M:     '26363641898970912366',
+        L:     '23443437822660736820',
+        XL:    '21107475743743994691',
+        XXL:   '27407060959316543018',
+        '2XL': '27407060959316543018',
+        '3XL': '92366706173171220975',
+      },
+      variants: {
+        XS: 122974,
+        S: 122974,
+        M: 122967,
+        L: 122960,
+        XL: 122981,
+        XXL: 122946,
+        '2XL': 122946,
+        '3XL': 122953,
+      },
+    },
+    eu: {
+      product_id: '6ab35abb3162135b62017508',
+      skus: {
+        XXS:   '53217857830425462426',
+        XS:    '10131537300499143846',
+        S:     '76878915596090047870',
+        M:     '16124782577499022153',
+        L:     '15019336011386976321',
+        XL:    '13533879961654270381',
+        XXL:   '26572515677947358479',
+        '2XL': '26572515677947358479',
+        '3XL': '10690478594364583191',
+      },
+      variants: {
+        XXS: 111238,
+        XS: 111238,
+        S: 111238,
+        M: 111243,
+        L: 111248,
+        XL: 111253,
+        XXL: 111258,
+        '2XL': 111258,
+        '3XL': 111263,
+      },
+    },
+  },
+
+  'soulfull-black': {
+    us: {
+      product_id: '6ab29adcfe1948f8e50845d0',
+      skus: {
+        XS:    '20673100447619810368',
+        S:     '20673100447619810368',
+        M:     '11691036215182526354',
+        L:     '11978837893097280055',
+        XL:    '10215773981621895706',
+        XXL:   '37884120461314741456',
+        '2XL': '37884120461314741456',
+        '3XL': '75167445498081411786',
+      },
+      variants: {
+        XS: 117443,
+        S: 117443,
+        M: 117442,
+        L: 117441,
+        XL: 117444,
+        XXL: 117437,
+        '2XL': 117437,
+        '3XL': 117438,
+      },
+    },
+    eu: {
+      product_id: '6ab3561aeccd60519b0e46df',
+      skus: {
+        XS:    '30295883003355094037',
+        S:     '30295883003355094037',
+        M:     '31717641852754272017',
+        L:     '28138594929242016899',
+        XL:    '61339382315425784924',
+        XXL:   '45288379569067486891',
+        '2XL': '45288379569067486891',
+        '3XL': '10552485671753404688',
+      },
+      variants: {
+        XS: 112804,
+        S: 112804,
+        M: 112805,
+        L: 112806,
+        XL: 112807,
+        XXL: 112811,
+        '2XL': 112811,
+        '3XL': 112808,
+      },
+    },
+  },
+
+  'soulfull-hoodie': {
+    us: {
+      product_id: '6ab291263935ae2c6206a37b',
+      skus: {
+        XS:    '19896731155756690453',
+        S:     '19896731155756690453',
+        M:     '77984647279568474330',
+        L:     '31377428779565062163',
+        XL:    '20261092898433628850',
+        XXL:   '27584467386877600473',
+        '2XL': '27584467386877600473',
+        '3XL': '17893175142442418064',
+      },
+      variants: {
+        XS: 122974,
+        S: 122974,
+        M: 122967,
+        L: 122960,
+        XL: 122981,
+        XXL: 122946,
+        '2XL': 122946,
+        '3XL': 122953,
+      },
+    },
+    eu: {
+      product_id: '6ab35bff296584cc59077be0',
+      skus: {
+        XXS:   '28092099603561450042',
+        XS:    '27442732285742740627',
+        S:     '32867473508934113480',
+        M:     '14685622144849270969',
+        L:     '24677072658552255815',
+        XL:    '19571172551358380217',
+        XXL:   '26889226387751989687',
+        '2XL': '26889226387751989687',
+        '3XL': '33955352806563092429',
+      },
+      variants: {
+        XXS: 111238,
+        XS: 111238,
+        S: 111238,
+        M: 111243,
+        L: 111248,
+        XL: 111253,
+        XXL: 111258,
+        '2XL': 111258,
+        '3XL': 111263,
+      },
+    },
+  },
+
+  'the-origin': {
+    us: {
+      product_id: '6ab299d0f5cdd58a5b0621a6',
+      skus: {
+        XS:    '22560816753298099113',
+        S:     '22560816753298099113',
+        M:     '30251477406888890998',
+        L:     '27946410388126084754',
+        XL:    '96367682757764262714',
+        XXL:   '26847724567853254170',
+        '2XL': '26847724567853254170',
+        '3XL': '23007708630150565133',
+      },
+      variants: {
+        XS: 117443,
+        S: 117443,
+        M: 117442,
+        L: 117441,
+        XL: 117444,
+        XXL: 117437,
+        '2XL': 117437,
+        '3XL': 117438,
+      },
+    },
+    eu: {
+      product_id: '6ab35594957fc9a1ac0a1003',
+      skus: {
+        XS:    '29450870968329325653',
+        S:     '29450870968329325653',
+        M:     '33649070315080182633',
+        L:     '57139423739969825342',
+        XL:    '22644575310987038494',
+        XXL:   '12726424366503481967',
+        '2XL': '12726424366503481967',
+        '3XL': '13194139945372537479',
+      },
+      variants: {
+        XS: 112804,
+        S: 112804,
+        M: 112805,
+        L: 112806,
+        XL: 112807,
+        XXL: 112811,
+        '2XL': 112811,
+        '3XL': 112808,
+      },
+    },
+  },
+
+  'broken-001': {
+    us: {
+      product_id: '6ab36906a36e86001e0f9224',
+      skus: {
+        XS:    '17418060378961901892',
+        S:     '17418060378961901892',
+        M:     '29740615768721914937',
+        L:     '28205133067246876197',
+        XL:    '88345423190582581366',
+        XXL:   '25612069261725447065',
+        '2XL': '25612069261725447065',
+        '3XL': '17356456472677008122',
+      },
+      variants: {
+        XS: 117443,
+        S: 117443,
+        M: 117442,
+        L: 117441,
+        XL: 117444,
+        XXL: 117437,
+        '2XL': 117437,
+        '3XL': 117438,
+      },
+    },
+    eu: {
+      product_id: '6ab36c644d44cb6490077ab2',
+      skus: {
+        XS:    '19892451419877031491',
+        S:     '19892451419877031491',
+        M:     '15609584500384178504',
+        L:     '10304811022881761138',
+        XL:    '75591685968917525282',
+        XXL:   '83607719543305604016',
+        '2XL': '83607719543305604016',
+        '3XL': '18664579991770526514',
+      },
+      variants: {
+        XS: 112804,
+        S: 112804,
+        M: 112805,
+        L: 112806,
+        XL: 112807,
+        XXL: 112811,
+        '2XL': 112811,
+        '3XL': 112808,
+      },
+    },
+  },
+
+  'broken-hoodie': {
+    us: {
+      product_id: '6ac11a04383d52a1cf0f7f3a', // BROKEN HOODIE — Black US
+      skus: {
+        S:     '17446662024064508169',
+        M:     '17647634305453112921',
+        L:     '28652718148135860483',
+        XL:    '99864101610556921134',
+        XXL:   '13336309646740823954',
+        '2XL': '13336309646740823954',
+        '3XL': '32909768585122851719',
+      },
+      variants: {
+        S: 0,
+        M: 0,
+        L: 0,
+        XL: 0,
+        '2XL': 0,
+        '3XL': 0,
+      },
+    },
+    eu: {
+      product_id: '6ab36e3744eaee3b160398b7',
+      skus: {
+        XXS:   '15109931876530635905',
+        XS:    '55769779003127887260',
+        S:     '17708192943880807312',
+        M:     '18326402980468814756',
+        L:     '25873310707507579396',
+        XL:    '29026642588500477215',
+        XXL:   '23513991437774103386',
+        '2XL': '23513991437774103386',
+        '3XL': '29274333473091012748',
+        '4XL': '17004701775697754988',
+        '5XL': '15811486605420506820',
+      },
+      variants: {
+        XXS: 111228,
+        XS: 111233,
+        S: 111238,
+        M: 111243,
+        L: 111248,
+        XL: 111253,
+        XXL: 111258,
+        '2XL': 111258,
+        '3XL': 111263,
+        '4XL': 112032,
+        '5XL': 112047,
+      },
+    },
+  },
+
+  'soulfull-white': {
+    us: {
+      product_id: '6ab215744f698da18b01ae9c',
+      variants: {
+        XS: 117605,
+        S: 117605,
+        M: 117606,
+        L: 117607,
+        XL: 117608,
+        XXL: 117609,
+        '2XL': 117609,
+        '3XL': 117610,
+      },
+    },
+    eu: {
+      product_id: '6ab3578c7d5ed2acdf0b4588',
+      variants: {
+        XS: 116303,
+        S: 116303,
+        M: 116304,
+        L: 116305,
+        XL: 116306,
+        XXL: 116307,
+        '2XL': 116307,
+        '3XL': 116308,
+      },
+    },
+  },
+
+  // Skye Blue: Disponibil EXCLUSIV în SUA (Shaka Wear 7.5oz / 255 GSM).
+  // În Europa nu există bumbac greu pe această nuanță. Comenzile din EU se rutează automat către SUA cu livrare internațională.
+  'soulfull-skye-blue': {
+    us: {
+      product_id: '6ab29adcfe1948f8e50845d0', // Shaka Wear US Studio
+      variants: {
+        XS: 117443,
+        S: 117443,
+        M: 117442,
+        L: 117441,
+        XL: 117444,
+        XXL: 117437,
+        '2XL': 117437,
+        '3XL': 117438,
+      },
+    },
+  },
+
+  'essentials-skye-blue': {
+    us: {
+      product_id: '6aae1606905b342a3c0d43c5', // Shaka Wear US Studio
+      variants: {
+        XS: 117443,
+        S: 117443,
+        M: 117442,
+        L: 117441,
+        XL: 117444,
+        XXL: 117437,
+        '2XL': 117437,
+        '3XL': 117438,
+      },
+    },
+  },
+
+  'embrace-your-shadow': {
+    us: {
+      product_id: '6ab7f49b4d01de9be704d603', // Embrace Shadoww - US Edition
+      skus: {
+        XS:    '19040100313485620273',
+        S:     '19040100313485620273',
+        M:     '95305510176283861157',
+        L:     '12774629888684579663',
+        XL:    '14228109240752112226',
+        XXL:   '27882814355785418830',
+        '2XL': '27882814355785418830',
+        '3XL': '22163084106407744271',
+      },
+      variants: {
+        XS: 117443,
+        S: 117443,
+        M: 117442,
+        L: 117441,
+        XL: 117444,
+        XXL: 117437,
+        '2XL': 117437,
+        '3XL': 117438,
+      },
+    },
+    eu: {
+      product_id: '6ab7fa6548e59ba40201baa9', // Embrace Your Shadoww - EU Edition
+      skus: {
+        XS:    '13597834197964192179',
+        S:     '13597834197964192179',
+        M:     '17417927968326986248',
+        L:     '10946817685756798812',
+        XL:    '86222498084142555971',
+        XXL:   '19110827966615244072',
+        '2XL': '19110827966615244072',
+        '3XL': '21267749483057846567',
+      },
+      variants: {
+        XS: 112804,
+        S: 112804,
+        M: 112805,
+        L: 112806,
+        XL: 112807,
+        XXL: 112811,
+        '2XL': 112811,
+        '3XL': 112808,
+      },
+    },
+  },
+
+  // ─── INTERGALACTIC LOVE ────────────────────────────────────────────────────────
+  // US Edition: listing unic cu Black + White (Shaka Wear Max Heavyweight)
+  // SKU-urile de mai jos sunt extrase din Printify Dashboard → Pricing tab
+  // TODO: Completează product_id după ce accesezi Printify → URL-ul produsului
+  // TODO: Creează EU Edition în Printify și completează blocul eu: {}
+
+  'intergalactic-love-black': {
+    us: {
+      product_id: '6abb46f816cc1ce1f50799c8', // INTERGALACTIC LOVE — US listing (Black + White)
+      skus: {
+        S:     '30898163047461016827',
+        M:     '17385753305615224110',
+        L:     '12760304595203719380',
+        XL:    '93046478005770758326',
+        '2XL': '28591373827819005335',
+        '3XL': '39621642448149445565',
+      },
+      variants: {
+        S: 0,
+        M: 0,
+        L: 0,
+        XL: 0,
+        '2XL': 0,
+        '3XL': 0,
+      },
+    },
+    eu: {
+      product_id: '6abba97bfe369b7a49073d03', // INTERGALACTIC LOVE Black White[EU Edition] (Build Your Brand)
+      skus: {
+        S:     '45443918284235039113',
+        M:     '70021962844323721077',
+        L:     '69201845645811856769',
+        XL:    '22354653840571139090',
+        XXL:   '18704951652488284729',
+        '2XL': '18704951652488284729',
+        '3XL': '14904510786305908468',
+      },
+      variants: {
+        S: 0,
+        M: 0,
+        L: 0,
+        XL: 0,
+        '2XL': 0,
+        '3XL': 0,
+      },
+    },
+  },
+
+  'intergalactic-love-white': {
+    us: {
+      product_id: '6abb46f816cc1ce1f50799c8', // INTERGALACTIC LOVE — US listing (Black + White)
+      skus: {
+        S:     '21288848408749860551',
+        M:     '10682619724353431797',
+        L:     '20981303449374470638',
+        XL:    '76832009614472288560',
+        '2XL': '30153135931736039129',
+        '3XL': '61702047414199212954',
+      },
+      variants: {
+        S: 0,
+        M: 0,
+        L: 0,
+        XL: 0,
+        '2XL': 0,
+        '3XL': 0,
+      },
+    },
+    eu: {
+      product_id: '6abba97bfe369b7a49073d03', // INTERGALACTIC LOVE Black White[EU Edition] (Build Your Brand)
+      skus: {
+        S:     '10329914721256182339',
+        M:     '15231050275018458710',
+        L:     '19002954385557657473',
+        XL:    '12612250139384766078',
+        XXL:   '84560725559173087831',
+        '2XL': '84560725559173087831',
+        '3XL': '30317242526391537500',
+      },
+      variants: {
+        S: 0,
+        M: 0,
+        L: 0,
+        XL: 0,
+        '2XL': 0,
+        '3XL': 0,
+      },
+    },
+  },
+
+  // ─── TRANSCEND EGO ───────────────────────────────────────────────────────────
+  // US Edition: Shaka Wear Max Heavyweight (7.5 oz / 255 GSM)
+  // SKU-urile și product_id vor fi adăugate imediat după obținerea lor din Printify
+  'transcend-ego-black': {
+    us: {
+      product_id: '6abbc658b0b20629f905c8da', // TRANSCEND EVO 1 Black [US Edition] (Shaka Wear)
+      skus: {
+        S:     '52180367318336124317',
+        M:     '87179340944004982745',
+        L:     '10951852095682399112',
+        XL:    '11089091529774287634',
+        '2XL': '61486817104991997964',
+        '3XL': '16040374130040730495',
+      },
+      variants: {
+        S: 0,
+        M: 0,
+        L: 0,
+        XL: 0,
+        '2XL': 0,
+        '3XL': 0,
+      },
+    },
+    eu: {
+      product_id: '6abbcb4388fc7120f20ac627', // TRANSCEND EVO 1 [EU Edition] (Build Your Brand)
+      skus: {
+        S:     '19338851190191592030',
+        M:     '27308945534746319657',
+        L:     '14712495893079894363',
+        XL:    '10562815071918296583',
+        XXL:   '47991448298684397553',
+        '2XL': '47991448298684397553',
+        '3XL': '10236065591834256850',
+      },
+      variants: {
+        S: 0,
+        M: 0,
+        L: 0,
+        XL: 0,
+        '2XL': 0,
+        '3XL': 0,
+      },
+    },
+  },
+
+  // ─── TRANSCEND HOODIE ────────────────────────────────────────────────────────
+  // US Edition: TRANSCEND HOODIE — Black US (Heavyweight 3-End Fleece 10 oz)
+  'transcend-hoodie': {
+    us: {
+      product_id: '6ab36d0813b1a2af0004a90b', // TRANSCEND HOODIE — Black US
+      skus: {
+        S:     '30538787110468001558',
+        M:     '30995494672600306753',
+        L:     '19970027891152443049',
+        XL:    '20387135977118957320',
+        XXL:   '17991858178154000161',
+        '2XL': '17991858178154000161',
+        '3XL': '39230757160163214810',
+      },
+      variants: {
+        S: 0,
+        M: 0,
+        L: 0,
+        XL: 0,
+        '2XL': 0,
+        '3XL': 0,
+      },
+    },
+    eu: {
+      product_id: '6ac1054e352fbf9bce0e01ff', // TRANSCEND HOODIE — Black EU
+      skus: {
+        S:     '20318178454746940297',
+        M:     '15273696036153044183',
+        L:     '14739586503494997110',
+        XL:    '19787000029282323674',
+        XXL:   '15855656221493552655',
+        '2XL': '15855656221493552655',
+        '3XL': '25696815573750992654',
+      },
+      variants: {
+        S: 0,
+        M: 0,
+        L: 0,
+        XL: 0,
+        '2XL': 0,
+        '3XL': 0,
+      },
+    },
+  },
+
+  // ─── INFINITY LOVE DRAGON ───────────────────────────────────────────────────
+  // US Edition (Shaka Wear) / EU Edition (Build Your Brand)
+  // SKU-urile vor fi completate imediat ce sunt trimise din Printify
+  'infinity-love-dragon': {
+    us: {
+      product_id: '6abde83f3cf16eb0f90c4ba5', // INFINITY LOVE Black [US Edition] (Shaka Wear)
+      skus: {
+        S:     '24819719241385988733',
+        M:     '72323482586438347268',
+        L:     '13277353094707065383',
+        XL:    '28808664064650661207',
+        '2XL': '16472329844241653693',
+        '3XL': '10327978562253304228',
+      },
+      variants: {
+        S: 0,
+        M: 0,
+        L: 0,
+        XL: 0,
+        '2XL': 0,
+        '3XL': 0,
+      },
+    },
+    eu: {
+      product_id: '6abdf05352658305010d8054', // INFINITY LOVE — EU Edition (Build Your Brand)
+      skus: {
+        S:     '23030986250400358758',
+        M:     '19788532461494424160',
+        L:     '17513968288741058048',
+        XL:    '15698941857939580650',
+        XXL:   '19919156631044419054',
+        '2XL': '19919156631044419054',
+        '3XL': '20872563225798044558',
+      },
+      variants: {
+        S: 0,
+        M: 0,
+        L: 0,
+        XL: 0,
+        '2XL': 0,
+        '3XL': 0,
+      },
+    },
+  },
+
+  // ─── DRAGON HOODIE ───────────────────────────────────────────────────────────
+  // US Edition: DRAGON HOODIE — Black US (Heavyweight 3-End Fleece 10 oz)
+  // EU Edition: DRAGON HOODIE — Black EU (Heavyweight 3-End Fleece 10 oz)
+  'dragon-hoodie': {
+    us: {
+      product_id: '6ac10fa8791acaa90f0d82d4', // DRAGON HOODIE — Black US
+      skus: {
+        S:     '25991968870603499396',
+        M:     '17844812773934614520',
+        L:     '26745381265871582658',
+        XL:    '41456527485889193327',
+        XXL:   '11041942573713793646',
+        '2XL': '11041942573713793646',
+        '3XL': '10523526541010883793',
+      },
+      variants: {
+        S: 0,
+        M: 0,
+        L: 0,
+        XL: 0,
+        '2XL': 0,
+        '3XL': 0,
+      },
+    },
+    eu: {
+      product_id: '6ac1093e791acaa90f0d7f98', // DRAGON HOODIE — Black EU
+      skus: {
+        S:     '21606624951517679347',
+        M:     '63762004634703795833',
+        L:     '24764988755951284423',
+        XL:    '11663900927343384869',
+        XXL:   '24344098187371521370',
+        '2XL': '24344098187371521370',
+        '3XL': '28036345418189098626',
+      },
+      variants: {
+        S: 0,
+        M: 0,
+        L: 0,
+        XL: 0,
+        '2XL': 0,
+        '3XL': 0,
+      },
+    },
+  },
+
+  // ─── INTERGALACTIC HOODIE ───────────────────────────────────────────────────
+  // US Edition: INTERGALACTIC HOODIE — Black US (Heavyweight 3-End Fleece 10 oz)
+  // EU Edition: INTERGALACTIC HOODIE — Black EU (Heavyweight 3-End Fleece 10 oz)
+  'intergalactic-hoodie': {
+    us: {
+      product_id: '6ac117f0e3388757040c0ab1', // INTERGALACTIC HOODIE — Black US
+      skus: {
+        S:     '32416671415808896390',
+        M:     '27690583399203348984',
+        L:     '40981105301815991933',
+        XL:    '37733348597827993354',
+        XXL:   '10178568922706322277',
+        '2XL': '10178568922706322277',
+        '3XL': '19944790733944700096',
+      },
+      variants: {
+        S: 0,
+        M: 0,
+        L: 0,
+        XL: 0,
+        '2XL': 0,
+        '3XL': 0,
+      },
+    },
+    eu: {
+      product_id: '6ac115022778b01ef005344b', // INTERGALACTIC HOODIE — Black EU
+      skus: {
+        S:     '15869728418098729780',
+        M:     '10273946225213327237',
+        L:     '19239888273309872088',
+        XL:    '69026970363280003393',
+        XXL:   '12825526257920996050',
+        '2XL': '12825526257920996050',
+        '3XL': '34451033750053473523',
+      },
+      variants: {
+        S: 0,
+        M: 0,
+        L: 0,
+        XL: 0,
+        '2XL': 0,
+        '3XL': 0,
+      },
+    },
+  },
+  'intergalactic-love-hoodie': {
+    us: {
+      product_id: '6ac117f0e3388757040c0ab1', // INTERGALACTIC HOODIE — Black US
+      skus: {
+        S:     '32416671415808896390',
+        M:     '27690583399203348984',
+        L:     '40981105301815991933',
+        XL:    '37733348597827993354',
+        XXL:   '10178568922706322277',
+        '2XL': '10178568922706322277',
+        '3XL': '19944790733944700096',
+      },
+      variants: {
+        S: 0,
+        M: 0,
+        L: 0,
+        XL: 0,
+        '2XL': 0,
+        '3XL': 0,
+      },
+    },
+    eu: {
+      product_id: '6ac115022778b01ef005344b',
+      skus: {
+        S:     '15869728418098729780',
+        M:     '10273946225213327237',
+        L:     '19239888273309872088',
+        XL:    '69026970363280003393',
+        XXL:   '12825526257920996050',
+        '2XL': '12825526257920996050',
+        '3XL': '34451033750053473523',
+      },
+      variants: {
+        S: 0,
+        M: 0,
+        L: 0,
+        XL: 0,
+        '2XL': 0,
+        '3XL': 0,
+      },
+    },
+  },
+}
+
+// ─── Țări UE (non-US routing) ─────────────────────────────────────────────────
+// Orice țară care NU e 'US' → Stanley/Stella (fulfillment Europa)
+const EU_COUNTRIES = [
+  'RO', 'DE', 'FR', 'IT', 'ES', 'NL', 'BE', 'AT', 'PL', 'CZ',
+  'SK', 'HU', 'HR', 'BG', 'GR', 'PT', 'FI', 'SE', 'DK', 'IE',
+  'LU', 'SI', 'EE', 'LV', 'LT', 'MT', 'CY', 'GB', 'CH', 'NO',
+]
+
+// ─── Helper: determină furnizorul pe baza țării ────────────────────────────────
+function getRegion(country) {
+  if (country === 'US' || country === 'CA') return 'us'
+  return 'eu'
+}
+
+// ─── Helper: plasare comandă la Printify ──────────────────────────────────────
+async function placePrintifyOrder(session, orderItems) {
+  const customerDetails = session.customer_details
+  const shippingDetails = session.shipping_details || customerDetails
+  const address = shippingDetails?.address || customerDetails?.address
+
+  if (!address) {
+    throw new Error('[printify] Missing shipping/customer address in Stripe session')
+  }
+
+  const country = address.country || 'US'
+  const region = getRegion(country)
+
+  // Parsare nume
+  const fullName = shippingDetails?.name || customerDetails?.name || 'Customer'
+  const nameParts = fullName.trim().split(' ')
+  const firstName = nameParts[0] || 'Customer'
+  const lastName = nameParts.slice(1).join(' ') || '.'
+
+  // ─── Construire line_items ──────────────────────────────────────────────────
+  const lineItems = []
+  const skippedItems = []
+
+  for (const item of orderItems) {
+    const productMap = PRINTIFY_PRODUCT_MAP[item.productId]
+
+    if (!productMap) {
+      console.warn(`[printify] ⚠️  No product map for productId: ${item.productId}`)
+      skippedItems.push({ ...item, reason: 'NO_PRODUCT_MAP' })
+      continue
+    }
+
+    // Dacă produsul nu are atelier în regiunea respectivă (ex: Skye Blue exclusiv SUA), fallback la US (livrare internațională)
+    const regionMap = productMap[region] || productMap.us
+
+    if (!regionMap) {
+      console.warn(`[printify] ⚠️  No ${region} or US variant for productId: ${item.productId}`)
+      skippedItems.push({ ...item, reason: `NO_REGION_MAP_${region.toUpperCase()}` })
+      continue
+    }
+
+    const sku = regionMap.skus?.[item.size]
+    const variantId = regionMap.variants?.[item.size]
+
+    if (variantId && variantId !== 0) {
+      lineItems.push({
+        product_id: regionMap.product_id,
+        variant_id: variantId,
+        quantity: parseInt(item.quantity, 10),
+      })
+    } else if (sku) {
+      lineItems.push({
+        sku: sku,
+        quantity: parseInt(item.quantity, 10),
+      })
+    } else {
+      console.warn(
+        `[printify] ⚠️  variant/sku not configured for ${item.productId} / ${item.size} / ${region}. ` +
+        `Update PRINTIFY_PRODUCT_MAP in api/stripe-webhook.js`
+      )
+      skippedItems.push({ ...item, reason: 'VARIANT_OR_SKU_PLACEHOLDER', region })
+      continue
+    }
+  }
+
+  if (lineItems.length === 0) {
+    const reason = skippedItems.map((s) => `${s.productId}/${s.size}: ${s.reason}`).join(', ')
+    throw new Error(`[printify] All items skipped — no valid Printify mappings. Details: ${reason}`)
+  }
+
+  // ─── Payload Printify ───────────────────────────────────────────────────────
+  const printifyPayload = {
+    external_id: session.id,              // Stripe session ID — deduplicare
+    line_items: lineItems,
+    shipping_method: 1,                   // 1 = Standard
+    send_shipping_notification: false,    // Nu trimitem email din Printify (Stripe a trimis deja)
+    address_to: {
+      first_name: firstName,
+      last_name: lastName,
+      email: customerDetails?.email || '',
+      country: country,
+      region: address.state || '',
+      address1: address.line1 || '',
+      address2: address.line2 || '',
+      city: address.city || '',
+      zip: address.postal_code || '',
+    },
+  }
+
+  console.log(
+    `[printify] Placing order for ${country} (${region} → ` +
+    `${region === 'us' ? 'Shaka Wear' : 'Stanley/Stella'}):`,
+    JSON.stringify(printifyPayload, null, 2)
+  )
+
+  // ─── Request Printify API ──────────────────────────────────────────────────
+  const response = await fetch(
+    `${PRINTIFY_API_BASE}/shops/${PRINTIFY_SHOP_ID}/orders.json`,
+    {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${PRINTIFY_API_TOKEN}`,
+        'Content-Type': 'application/json',
+        'User-Agent': 'HeavenlyNovaStore/1.0',
+      },
+      body: JSON.stringify(printifyPayload),
+    }
+  )
+
+  const responseText = await response.text()
+  let responseData
+
+  try {
+    responseData = JSON.parse(responseText)
+  } catch {
+    responseData = { raw: responseText }
+  }
+
+  if (!response.ok) {
+    throw new Error(
+      `[printify] API error ${response.status}: ${JSON.stringify(responseData)}`
+    )
+  }
+
+  console.log(`[printify] ✅ Order placed successfully. Printify Order ID: ${responseData.id}`)
+
+  return {
+    ...responseData,
+    _skippedItems: skippedItems.length > 0 ? skippedItems : undefined,
+    _region: region,
+  }
+}
+
+// ─── Helper: salvare în Supabase ──────────────────────────────────────────────
+async function saveOrderToSupabase(session, orderItems, printifyResult, fulfillmentError) {
+  const shipping = session.shipping_details
+  const customer = session.customer_details
+
+  const record = {
+    stripe_session_id: session.id,
+    stripe_payment_intent: session.payment_intent || null,
+    printify_order_id: printifyResult?.id?.toString() || null,
+    customer_name: shipping?.name || customer?.name || null,
+    customer_email: customer?.email || null,
+    shipping_country: shipping?.address?.country || null,
+    shipping_address: shipping?.address || null,
+    items: orderItems,
+    total_amount: session.amount_total || 0,          // en cenți
+    currency: session.currency || 'usd',
+    fulfillment_region: printifyResult?._region || null,
+    status: fulfillmentError ? 'fulfillment_error' : 'fulfilled',
+    printify_raw_response: printifyResult || null,
+    fulfillment_error: fulfillmentError || null,
+  }
+
+  const { data, error } = await supabase
+    .from('orders')
+    .insert(record)
+    .select('id')
+    .single()
+
+  if (error) {
+    // Nu oprim procesul — plata e confirmată
+    console.error('[supabase] ❌ Insert failed:', error.message)
+    return null
+  }
+
+  console.log('[supabase] ✅ Order saved, id:', data?.id)
+  return data?.id
+}
+
+// Dezactivăm parserul automat Vercel pentru a păstra buffer-ul brut necesar semnăturii Stripe
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+}
+
+async function getRawBody(req) {
+  if (req.rawBody) return req.rawBody
+  const chunks = []
+  for await (const chunk of req) {
+    chunks.push(typeof chunk === 'string' ? Buffer.from(chunk) : chunk)
+  }
+  return Buffer.concat(chunks)
+}
+
+// ─── Handler principal ────────────────────────────────────────────────────────
+export default async function handler(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' })
+  }
+
+  // ─── Verificare semnătură Stripe ───────────────────────────────────────────
+  // 🔒 SECURITY: Orice request fără semnătură Stripe validă este respins cu 400.
+  //    Nu există fallback — un POST fals nu poate declanșa comenzi reale Printify.
+  const signature = req.headers['stripe-signature']
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET
+
+  if (!signature) {
+    console.error('[stripe-webhook] ❌ Missing stripe-signature header')
+    return res.status(400).json({ error: 'Missing stripe-signature header' })
+  }
+
+  if (!webhookSecret) {
+    console.error('[stripe-webhook] ❌ STRIPE_WEBHOOK_SECRET env var not set')
+    return res.status(500).json({ error: 'Webhook secret not configured' })
+  }
+
+  let event
+  let rawBodyBuffer
+
+  try {
+    rawBodyBuffer = await getRawBody(req)
+    event = stripe.webhooks.constructEvent(rawBodyBuffer, signature, webhookSecret)
+  } catch (err) {
+    console.error('[stripe-webhook] ❌ Signature verification failed:', err.message)
+    return res.status(400).json({ error: `Webhook signature verification failed: ${err.message}` })
+  }
+
+  console.log(`[stripe-webhook] Event: ${event.type}`)
+
+  // ─── checkout.session.completed ────────────────────────────────────────────
+  if (event.type === 'checkout.session.completed') {
+    const session = event.data.object
+
+    // Verificare plată confirmată
+    if (session.payment_status !== 'paid') {
+      console.log('[stripe-webhook] Session not paid, skipping:', session.id)
+      return res.status(200).json({ received: true, action: 'skipped_unpaid' })
+    }
+
+    // Extragere date comandă din metadata Stripe
+    let orderItems = []
+    try {
+      orderItems = JSON.parse(session.metadata?.hvn_order_items || '[]')
+    } catch {
+      console.error('[stripe-webhook] ❌ Could not parse hvn_order_items metadata')
+    }
+
+    if (orderItems.length === 0) {
+      console.error('[stripe-webhook] ❌ No order items in metadata. Session:', session.id)
+      await saveOrderToSupabase(session, [], null, 'MISSING_METADATA')
+      return res.status(200).json({ received: true, action: 'error_no_items' })
+    }
+
+    // ─── Idempotență: Evită comenzi duplicate dacă Stripe retrimite webhook-ul ──
+    try {
+      const { data: existingOrder } = await supabase
+        .from('orders')
+        .select('id, printify_order_id, status')
+        .eq('stripe_session_id', session.id)
+        .maybeSingle()
+
+      if (existingOrder && existingOrder.status === 'fulfilled' && existingOrder.printify_order_id) {
+        console.log(
+          `[stripe-webhook] ⚠️ Session ${session.id} already fulfilled. ` +
+          `Printify Order ID: ${existingOrder.printify_order_id}. Skipping duplicate.`
+        )
+        return res.status(200).json({
+          received: true,
+          action: 'already_fulfilled',
+          printifyOrderId: existingOrder.printify_order_id,
+        })
+      }
+    } catch (dbErr) {
+      console.warn('[stripe-webhook] ⚠️ Idempotency check failed (proceeding):', dbErr.message)
+    }
+
+    // ─── Plasare comandă Printify ─────────────────────────────────────────────
+    let printifyResult = null
+    let fulfillmentError = null
+
+    try {
+      printifyResult = await placePrintifyOrder(session, orderItems)
+    } catch (err) {
+      console.error('[stripe-webhook] ❌ Printify order failed:', err.message)
+      fulfillmentError = err.message
+
+      // 🚨 ALERTĂ: Plată confirmată, fulfillment eșuat — necesită acțiune manuală
+      console.error(
+        `\n🚨 MANUAL FULFILLMENT REQUIRED\n` +
+        `Session:  ${session.id}\n` +
+        `Customer: ${session.customer_details?.email}\n` +
+        `Country:  ${session.shipping_details?.address?.country}\n` +
+        `Amount:   $${(session.amount_total / 100).toFixed(2)}\n` +
+        `Error:    ${err.message}\n`
+      )
+    }
+
+    // ─── Salvare în Supabase (indiferent de rezultatul Printify) ──────────────
+    await saveOrderToSupabase(session, orderItems, printifyResult, fulfillmentError)
+
+    return res.status(200).json({
+      received: true,
+      sessionId: session.id,
+      fulfillment: fulfillmentError ? 'error' : 'success',
+      printifyOrderId: printifyResult?.id || null,
+    })
+  }
+
+  // Alte events Stripe — ignorăm
+  return res.status(200).json({ received: true, action: 'ignored' })
+}

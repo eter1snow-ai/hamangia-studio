@@ -1,0 +1,126 @@
+import { Link } from 'react-router-dom'
+import { useRef, useEffect } from 'react'
+import { useLanguage } from '../../context/LanguageContext'
+
+export default function Footer() {
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const { t } = useLanguage()
+
+  useEffect(() => {
+    const v = videoRef.current
+    if (!v) return
+    v.muted = true
+    v.play().catch(() => {/* silently ignored — autoplay blocked by browser */})
+  }, [])
+
+  return (
+    <footer className="relative w-full bg-black text-white overflow-hidden" style={{ paddingTop: '100px', paddingBottom: '80px' }}>
+      {/* Video background — programmatic play pentru iOS (evită butonul nativ ▶) */}
+      <video
+        ref={videoRef}
+        className="absolute inset-0 w-full h-full object-cover opacity-20 pointer-events-none"
+        autoPlay
+        loop
+        muted
+        playsInline
+        controls={false}
+        preload="auto"
+        aria-hidden="true"
+      >
+        <source src="/Assets/Images/Video1.mp4" type="video/mp4" />
+      </video>
+
+      <div className="relative z-10 mx-auto px-10" style={{ maxWidth: '1400px' }}>
+        <div className="grid grid-cols-2 md:grid-cols-4" style={{ gap: '64px' }}>
+
+          {/* Brand */}
+          <div className="col-span-2 md:col-span-1" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <h2 style={{ fontSize: '0.95rem', fontWeight: 800, letterSpacing: '0.2em', lineHeight: 1.4 }} className="uppercase">
+              HAMANGIA
+            </h2>
+            <p style={{ fontSize: '0.75rem', letterSpacing: '0.15em', lineHeight: 1.7, color: '#888888' }} className="uppercase">
+              Arhaic &amp; Dark Folklore Streetwear
+            </p>
+          </div>
+
+          {/* Support */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <h3 style={{ fontSize: '0.72rem', fontWeight: 600, letterSpacing: '0.28em', lineHeight: 1.4, color: '#D6D6D6' }} className="uppercase">
+              {t('footer.support', 'Support')}
+            </h3>
+            <nav style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <Link to="/contact" style={{ fontSize: '0.82rem', fontWeight: 300, letterSpacing: '0.1em', lineHeight: 1.6, color: '#C2C2C2' }} className="uppercase hover:text-white transition-colors">{t('footer.contact')}</Link>
+              <Link to="/track-order" style={{ fontSize: '0.82rem', fontWeight: 300, letterSpacing: '0.1em', lineHeight: 1.6, color: '#C2C2C2' }} className="uppercase hover:text-white transition-colors">{t('footer.track')}</Link>
+              <Link to="/refund-policy" style={{ fontSize: '0.82rem', fontWeight: 300, letterSpacing: '0.1em', lineHeight: 1.6, color: '#C2C2C2' }} className="uppercase hover:text-white transition-colors">{t('footer.refunds')}</Link>
+              <Link to="/shipping-policy" style={{ fontSize: '0.82rem', fontWeight: 300, letterSpacing: '0.1em', lineHeight: 1.6, color: '#C2C2C2' }} className="uppercase hover:text-white transition-colors">{t('footer.shipping')}</Link>
+            </nav>
+          </div>
+
+          {/* Brand */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <h3 style={{ fontSize: '0.72rem', fontWeight: 600, letterSpacing: '0.28em', lineHeight: 1.4, color: '#D6D6D6' }} className="uppercase">
+              {t('footer.brand', 'Brand')}
+            </h3>
+            <nav style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <Link to="/drops" style={{ fontSize: '0.82rem', fontWeight: 300, letterSpacing: '0.1em', lineHeight: 1.6, color: '#C2C2C2' }} className="uppercase hover:text-white transition-colors">{t('nav.drops')}</Link>
+              <Link to="/heritage" style={{ fontSize: '0.82rem', fontWeight: 300, letterSpacing: '0.1em', lineHeight: 1.6, color: '#C2C2C2' }} className="uppercase hover:text-white transition-colors">{t('nav.heritage')}</Link>
+              <Link to="/seraphim" style={{ fontSize: '0.82rem', fontWeight: 300, letterSpacing: '0.1em', lineHeight: 1.6, color: '#C2C2C2' }} className="uppercase hover:text-white transition-colors">{t('nav.seraphim')}</Link>
+              <Link to="/join" style={{ fontSize: '0.82rem', fontWeight: 300, letterSpacing: '0.1em', lineHeight: 1.6, color: '#C2C2C2' }} className="uppercase hover:text-white transition-colors">{t('nav.join')}</Link>
+            </nav>
+          </div>
+
+          {/* Social */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <h3 style={{ fontSize: '0.72rem', fontWeight: 600, letterSpacing: '0.28em', lineHeight: 1.4, color: '#D6D6D6' }} className="uppercase">
+              {t('footer.social', 'Social')}
+            </h3>
+            <nav style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <a href="https://www.instagram.com/heavenlynovastreetwear" target="_blank" rel="noopener noreferrer" style={{ fontSize: '0.82rem', fontWeight: 300, letterSpacing: '0.1em', lineHeight: 1.6, color: '#C2C2C2' }} className="uppercase hover:text-white transition-colors">Instagram →</a>
+              {/* TikTok hidden until the page has more content/followers. Restore:
+              <a href="https://www.tiktok.com/@heavenlynova.studio" target="_blank" rel="noopener noreferrer" style={{ fontSize: '0.82rem', fontWeight: 300, letterSpacing: '0.1em', lineHeight: 1.6, color: '#C2C2C2' }} className="uppercase hover:text-white transition-colors">TikTok →</a> */}
+              <a href="https://www.facebook.com/HeavenlyNovaOfficial" target="_blank" rel="noopener noreferrer" style={{ fontSize: '0.82rem', fontWeight: 300, letterSpacing: '0.1em', lineHeight: 1.6, color: '#C2C2C2' }} className="uppercase hover:text-white transition-colors">Facebook →</a>
+              <a href="https://ro.pinterest.com/HeavenlynovaStreetwear/" target="_blank" rel="noopener noreferrer" style={{ fontSize: '0.82rem', fontWeight: 300, letterSpacing: '0.1em', lineHeight: 1.6, color: '#C2C2C2' }} className="uppercase hover:text-white transition-colors">Pinterest →</a>
+              <Link to="/story" style={{ fontSize: '0.82rem', fontWeight: 300, letterSpacing: '0.1em', lineHeight: 1.6 }} className="uppercase text-white hover:text-white transition-colors">{t('footer.origin', '— THE ORIGIN —')}</Link>
+            </nav>
+          </div>
+        </div>
+
+        {/* Luxury Global Atelier & Complimentary Shipping Strip */}
+        <div className="mt-16 pt-8 border-t border-white/[0.08] flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-2 font-mono text-[9.5px] uppercase tracking-[0.22em] text-neutral-400">
+            <span className="flex items-center gap-2 text-white">
+              <span className="w-1.5 h-1.5 bg-emerald-400/80 rounded-full animate-pulse" />
+              {t('footer.atelier_dispatch', 'Made to Order')}
+            </span>
+            <span className="text-neutral-700 hidden sm:inline">•</span>
+            <span>{t('footer.shipping_territories', 'Free Shipping: USA, Canada, UK & Europe')}</span>
+            <span className="text-neutral-700 hidden sm:inline">•</span>
+            <span className="text-neutral-500">{t('footer.shipping_estimate', 'Tracked 4–13 Business Days')}</span>
+          </div>
+          <Link
+            to="/shipping-policy"
+            className="font-mono text-[9px] uppercase tracking-[0.22em] text-neutral-400 hover:text-white transition-colors underline decoration-white/20 underline-offset-4"
+          >
+            {t('footer.shipping', 'Shipping Policy')} →
+          </Link>
+        </div>
+
+        <div className="flex flex-col md:flex-row justify-between items-center gap-4" style={{ borderTop: '1px solid #2A2A2A', marginTop: '40px', paddingTop: '32px', paddingBottom: '20px' }}>
+          <span style={{ fontSize: '0.72rem', letterSpacing: '0.2em', lineHeight: 1.6, color: '#888888' }} className="uppercase text-center md:text-left">
+            2026 HAMANGIA STUDIO — {t('footer.rights').toUpperCase()} | 
+            <Link to="/privacy-policy" style={{ color: '#888888', textDecoration: 'none', margin: '0 0.5rem', fontSize: '0.72rem', letterSpacing: '0.2em', lineHeight: 1.6 }} className="uppercase hover:text-white transition-colors">{t('footer.privacy')}</Link> |
+            <Link to="/terms-of-service" style={{ color: '#888888', textDecoration: 'none', margin: '0 0.5rem', fontSize: '0.72rem', letterSpacing: '0.2em', lineHeight: 1.6 }} className="uppercase hover:text-white transition-colors">{t('footer.terms')}</Link>
+          </span>
+          <div className="flex items-center gap-6">
+            {/* Footer Currency Indicator */}
+            <div className="flex items-center text-[10px] tracking-[0.15em] uppercase font-mono border border-neutral-800 bg-neutral-950 px-3 py-1 text-white font-bold">
+              RON (LEI)
+            </div>
+            <a href="mailto:contact@hamangiastudio.ro" className="uppercase hover:text-white transition-colors" style={{ fontSize: '0.82rem', letterSpacing: '0.15em', lineHeight: 1.6, color: '#D6D6D6', textDecoration: 'none' }}>contact@hamangiastudio.ro</a>
+          </div>
+        </div>
+      </div>
+    </footer>
+  )
+}
+
