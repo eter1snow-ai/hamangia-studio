@@ -8,15 +8,23 @@ import { useLanguage } from '../context/LanguageContext'
 type TypeFilter = 'all' | 'tee' | 'hoodie'
 type CollectionFilter = 'all' | 'flagship' | 'individuals' | 'essentials'
 
-const collectionLabels: Record<string, string> = {
-  all: 'Toate',
-  flagship: 'Piesa Erou',
-  individuals: 'Gravură & Folclor',
-  essentials: 'Chilim Geometric',
+const collectionLabels: Record<'ro' | 'en', Record<string, string>> = {
+  ro: {
+    all: 'Toate',
+    flagship: 'Piesa Erou',
+    individuals: 'Gravură & Folclor',
+    essentials: 'Chilim Geometric',
+  },
+  en: {
+    all: 'All',
+    flagship: 'Hero Piece',
+    individuals: 'Woodcut & Folklore',
+    essentials: 'Geometric Kilims',
+  },
 }
 
 export default function Drops() {
-  const { t } = useLanguage()
+  const { language, t } = useLanguage()
   const location = useLocation()
   const [typeFilter, setTypeFilter] = useState<TypeFilter>('all')
   const [collectionFilter, setCollectionFilter] = useState<CollectionFilter>('all')
@@ -50,10 +58,10 @@ export default function Drops() {
             transition={{ duration: 0.6 }}
             className="text-3xl sm:text-4xl md:text-5xl font-bold uppercase leading-tight tracking-tight"
           >
-            Colecția Arhaică // Drop 01
+            {t('drops.title')}
           </motion.h1>
           <p className="mt-4 max-w-2xl text-neutral-300 leading-relaxed font-mono text-sm">
-            Atelier independent. Piese din bumbac greu de 240 GSM, croială boxy oversized și print DTF 300 DPI.
+            {t('drops.subtitle')}
           </p>
 
           {/* Filters */}
@@ -80,7 +88,7 @@ export default function Drops() {
                   className={filterBtn(collectionFilter === c)}
                   style={{ borderRadius: 0 }}
                 >
-                  {c === 'all' ? t('drops.all', 'All') : collectionLabels[c]}
+                  {c === 'all' ? t('drops.all', 'All') : collectionLabels[language][c]}
                 </button>
               ))}
             </div>

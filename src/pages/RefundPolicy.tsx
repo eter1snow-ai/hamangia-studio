@@ -1,186 +1,128 @@
-import { useState } from 'react'
+import { Link } from 'react-router-dom'
+import { useLanguage } from '../context/LanguageContext'
 
 export default function RefundPolicy() {
-  const [form, setForm] = useState({ orderNumber: '', fullName: '', email: '', reason: '', details: '', website: '' })
-  const [sent, setSent] = useState(false)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-    setError('')
-    try {
-      const res = await fetch('/api/returns', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
-      })
-      if (res.ok) {
-        setSent(true)
-      } else {
-        setError('Something went wrong. Try again.')
-      }
-    } catch {
-      setError('Something went wrong. Try again.')
-    } finally {
-      setLoading(false)
-    }
-  }
+  const { language } = useLanguage()
 
   return (
     <main className="min-h-screen bg-black text-white">
-      <div className="legal-policy-container" style={{ maxWidth: '800px', margin: '0 auto', padding: '120px 20px 60px', lineHeight: 1.7, overflowX: 'hidden' }}>
-        <h1 style={{ textTransform: 'uppercase', marginBottom: '10px', fontSize: '2rem', letterSpacing: '0.08em', fontWeight: '500' }}>
-          Refund &amp; Return Policy
-        </h1>
-        <p style={{ opacity: 0.7, fontSize: '0.9rem' }}>
-          <strong>Last updated:</strong> March 2026
-        </p>
+      <div className="legal-policy-container mx-auto px-6 py-32 max-w-[800px] leading-relaxed">
+        {language === 'ro' ? (
+          <>
+            <h1 className="font-display text-2xl sm:text-3xl font-bold uppercase tracking-tight mb-3">
+              Politică de Retur &amp; Rambursare
+            </h1>
+            <p className="text-xs uppercase tracking-widest text-neutral-500 mb-8 font-mono">
+              Conform legislației române (OUG nr. 34/2014) // HAMANGIA STUDIO
+            </p>
 
-        <div style={{ height: '1px', backgroundColor: '#333333', margin: '35px 0' }} />
+            <div className="h-px bg-neutral-800 my-8" />
 
-        {/* 1. OVERVIEW & PHILOSOPHY */}
-        <h3 style={{ marginTop: '30px', textTransform: 'uppercase', letterSpacing: '0.06em', fontSize: '1.1rem' }}>
-          1. Overview &amp; Made-to-Order Model
-        </h3>
-        <p>
-          At HeavenlyNova, every artifact is <strong>made to order</strong> — individually printed, precision-cured, and tailored once your payment is confirmed. By operating without bulk pre-warehousing, we reduce environmental waste and ensure meticulous quality control on every heavyweight textile.
-        </p>
-        <p style={{ marginTop: '10px' }}>
-          Because every piece is manufactured custom for the buyer, our cancellation and return procedures adhere strictly to international e-commerce regulations and European consumer protection directives.
-        </p>
+            <div className="space-y-6 text-sm text-neutral-300 leading-relaxed font-sans">
+              <p>
+                La <strong>HAMANGIA</strong>, ne dorim să fii pe deplin mulțumit de calitatea pieselor noastre din bumbac heavyweight de 240 GSM. Dacă un articol nu corespunde așteptărilor tale sau mărimea aleasă nu este potrivită, ai dreptul legal de a returna produsele comandate în termen de <strong>14 zile calendaristice</strong> de la primirea coletului, fără a fi nevoit să justifici decizia.
+              </p>
 
-        <div style={{ height: '1px', backgroundColor: '#333333', margin: '35px 0' }} />
+              <h2 className="text-base font-semibold uppercase tracking-wider text-white pt-4">
+                1. Condiții de Acceptare a Returului
+              </h2>
+              <p>
+                Pentru ca returul să fie aprobat, produsele trebuie să îndeplinească următoarele criterii:
+              </p>
+              <ul className="list-disc pl-6 space-y-2 text-neutral-300">
+                <li>Articolul nu a fost purtat, spălat, parfumat sau deteriorat.</li>
+                <li>Etichetele originale sunt intacte și atașate produsului.</li>
+                <li>Produsul este trimis în ambalajul original sau într-un ambalaj protector corespunzător.</li>
+              </ul>
 
-        {/* 2. STATUTORY CONFORMITY & DEFECTIVE GOODS */}
-        <h3 style={{ marginTop: '30px', textTransform: 'uppercase', letterSpacing: '0.06em', fontSize: '1.1rem' }}>
-          2. Quality Guarantee &amp; Defective Items (100% Covered)
-        </h3>
-        <p>
-          We stand unconditionally behind the physical construction and finish of our garments. In accordance with statutory legal conformity directives (EU Directive 2019/771, UK Consumer Rights Act 2015, and applicable US consumer laws):
-        </p>
-        <ul style={{ marginLeft: '24px', listStyleType: 'disc', marginTop: '10px', lineHeight: 1.8 }}>
-          <li>
-            <strong>Covered Issues:</strong> Manufacturing defects in stitching or fabric, misprinted designs, incorrect colorway/size sent by error, or garments damaged during transit.
-          </li>
-          <li>
-            <strong>Resolution:</strong> If your order qualifies, HeavenlyNova provides an <strong>immediate complimentary reprint and expedited reshipment</strong> at zero cost to you, or a <strong>full refund</strong> to your original payment method.
-          </li>
-          <li>
-            <strong>Reporting Window:</strong> Please inspect your parcel upon delivery and notify our team within <strong>48–72 hours of receipt</strong> by submitting the Return Request form below or emailing <a href="mailto:support@heavenlynova.com" style={{ color: '#ffffff', textDecoration: 'underline' }}>support@heavenlynova.com</a> with photographs of the defect and your order number.
-          </li>
-        </ul>
+              <h2 className="text-base font-semibold uppercase tracking-wider text-white pt-4">
+                2. Procedura de Inițiere a Returului
+              </h2>
+              <ol className="list-decimal pl-6 space-y-2 text-neutral-300">
+                <li>
+                  Trimiteți un email la{' '}
+                  <a href="mailto:contact@hamangiastudio.ro" className="underline text-white hover:text-neutral-300">
+                    contact@hamangiastudio.ro
+                  </a>{' '}
+                  cu subiectul <em>„Retur Comanda #[număr_comandă]”</em>.
+                </li>
+                <li>Specificați numele complet, numărul comenzii și contul IBAN (în cazul comenzilor plătite ramburs).</li>
+                <li>Echipa noastră vă va transmite adresa atelierului pentru expedierea coletului de retur prin curier.</li>
+              </ol>
 
-        <div style={{ height: '1px', backgroundColor: '#333333', margin: '35px 0' }} />
+              <h2 className="text-base font-semibold uppercase tracking-wider text-white pt-4">
+                3. Costul Transportului de Retur
+              </h2>
+              <p>
+                Cheltuielile directe de returnare a produselor revin în sarcina cumpărătorului, cu excepția cazurilor în care produsul a fost livrat greșit sau prezintă defecte de fabricație (caz în care HAMANGIA suportă integral costul de transport tur-retur).
+              </p>
 
-        {/* 3. MADE-TO-ORDER & SIZING CONSIDERATIONS */}
-        <h3 style={{ marginTop: '30px', textTransform: 'uppercase', letterSpacing: '0.06em', fontSize: '1.1rem' }}>
-          3. Made-to-Order Specifications &amp; Sizing Notice
-        </h3>
-        <p>
-          In accordance with <strong>Article 16(c) of EU Directive 2011/83/EU</strong> on Consumer Rights and comparable international commercial statutes, the statutory right of withdrawal does not apply to contracts for the supply of goods made to the consumer&apos;s specifications or clearly personalized.
-        </p>
-        <p style={{ marginTop: '10px' }}>
-          Consequently, once production has begun, we cannot accept returns, size exchanges, or offer refunds for:
-        </p>
-        <ul style={{ marginLeft: '24px', listStyleType: 'disc', marginTop: '10px', lineHeight: 1.8 }}>
-          <li>Incorrect size selection chosen by the buyer (we provide detailed interactive size guides with chest width and length measurements on all product pages).</li>
-          <li>Subjective change of mind or buyer&apos;s remorse following successful production.</li>
-          <li>Subtle color variations caused by different display calibrators (monitors/phones vs. calibrated CMYK garment inks).</li>
-        </ul>
-
-        <div style={{ height: '1px', backgroundColor: '#333333', margin: '35px 0' }} />
-
-        {/* 4. CANCELLATION WINDOW */}
-        <h3 style={{ marginTop: '30px', textTransform: 'uppercase', letterSpacing: '0.06em', fontSize: '1.1rem' }}>
-          4. Order Modification &amp; Cancellation Window
-        </h3>
-        <p>
-          Because our automated fulfillment pipeline immediately schedules orders for manufacturing, modifications (such as updating shipping address or size) or cancellations must be requested within <strong>2 hours of order placement</strong>.
-        </p>
-        <p style={{ marginTop: '10px' }}>
-          Once an order has entered the printing or stitching queue, it cannot be canceled or intercepted in transit.
-        </p>
-
-        <div style={{ height: '1px', backgroundColor: '#333333', margin: '35px 0' }} />
-
-        {/* 5. REFUND TIMELINE */}
-        <h3 style={{ marginTop: '30px', textTransform: 'uppercase', letterSpacing: '0.06em', fontSize: '1.1rem' }}>
-          5. Refund Processing Timelines
-        </h3>
-        <p>
-          Once a replacement or refund claim is verified by our customer care team:
-        </p>
-        <ul style={{ marginLeft: '24px', listStyleType: 'disc', marginTop: '10px', lineHeight: 1.8 }}>
-          <li>Refunds are initiated immediately via our secure payment gateway (<strong>Stripe</strong>).</li>
-          <li>Funds typically reflect back in your original bank account or card balance within <strong>5–10 business days</strong>, depending on your financial institution&apos;s processing cycles.</li>
-          <li>Original delivery charges (if applicable for non-standard expedited services) are refunded for justified defective claims.</li>
-        </ul>
-
-        <div style={{ height: '1px', backgroundColor: '#333333', margin: '35px 0' }} />
-
-        {/* SEPARATOR + TRANSITION TEXT */}
-        <div style={{ margin: '60px 0 48px', textAlign: 'center' }}>
-          <div style={{ height: '1px', backgroundColor: 'rgba(255,255,255,0.1)', marginBottom: '32px' }} />
-          <p className="text-xs uppercase tracking-[0.4em]" style={{ opacity: 0.4 }}>Direct Claims Protocol</p>
-          <p className="text-xs uppercase tracking-[0.3em]" style={{ opacity: 0.2, marginTop: '8px' }}>Official Return Request</p>
-          <div style={{ height: '1px', backgroundColor: 'rgba(255,255,255,0.1)', marginTop: '32px' }} />
-        </div>
-
-        {/* INITIATE RETURN FORM */}
-        <p className="text-xs tracking-[0.3em] uppercase" style={{ opacity: 0.6, marginBottom: '12px' }}>Resolution Center</p>
-        <h2 className="text-2xl font-light tracking-wide uppercase" style={{ marginBottom: '40px' }}>Submit Return / Replacement Claim</h2>
-
-        {!sent ? (
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Honeypot */}
-            <input type="text" name="website" value={form.website} onChange={(e) => setForm({ ...form, website: e.target.value })} style={{ display: 'none' }} tabIndex={-1} autoComplete="off" />
-
-            <input type="text" placeholder="Order Number (e.g., #HN-1042)" required value={form.orderNumber} onChange={(e) => setForm({ ...form, orderNumber: e.target.value })}
-              className="w-full bg-transparent border-b border-white/20 py-3 outline-none placeholder:opacity-40 text-sm tracking-wide focus:border-white transition" />
-
-            <input type="text" placeholder="Full Name" required value={form.fullName} onChange={(e) => setForm({ ...form, fullName: e.target.value })}
-              className="w-full bg-transparent border-b border-white/20 py-3 outline-none placeholder:opacity-40 text-sm tracking-wide focus:border-white transition" />
-
-            <input type="email" placeholder="Email Address Used at Checkout" required value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })}
-              className="w-full bg-transparent border-b border-white/20 py-3 outline-none placeholder:opacity-40 text-sm tracking-wide focus:border-white transition" />
-
-            <select required value={form.reason} onChange={(e) => setForm({ ...form, reason: e.target.value })}
-              className="w-full bg-black border-b border-white/20 py-3 outline-none text-sm tracking-wide focus:border-white transition" style={{ opacity: 0.8 }}>
-              <option value="">Reason for Claim</option>
-              <option>Damaged in transit</option>
-              <option>Defective fabric or construction</option>
-              <option>Misprinted or incorrect design</option>
-              <option>Wrong item or variant received</option>
-              <option>Other claim</option>
-            </select>
-
-            <textarea placeholder="Please describe the issue in detail. If the item is damaged or misprinted, our team will reply asking for photo proof." required rows={4} value={form.details} onChange={(e) => setForm({ ...form, details: e.target.value })}
-              className="w-full bg-transparent border-b border-white/20 py-3 outline-none placeholder:opacity-40 text-sm tracking-wide resize-none focus:border-white transition" />
-
-            {error && <p className="text-xs tracking-widest uppercase" style={{ color: '#ff4444' }}>{error}</p>}
-
-            <button type="submit" disabled={loading}
-              className="border border-white px-8 py-3 text-sm tracking-wider hover:bg-white hover:text-black transition"
-              style={{ opacity: loading ? 0.5 : 1, cursor: loading ? 'not-allowed' : 'pointer' }}>
-              {loading ? 'Transmitting Request...' : 'Transmit Return Claim'}
-            </button>
-          </form>
+              <h2 className="text-base font-semibold uppercase tracking-wider text-white pt-4">
+                4. Rambursarea Banilor
+              </h2>
+              <p>
+                După recepționarea și verificarea conformității produselor în atelier, contravaloarea comenzii va fi restituită în maximum <strong>14 zile calendaristice</strong>:
+              </p>
+              <ul className="list-disc pl-6 space-y-2 text-neutral-300">
+                <li>Pentru plăți cu cardul (Stripe): restituire automată pe cardul inițial.</li>
+                <li>Pentru comenzi cu plată ramburs: virament bancar direct în contul IBAN specificat de dumneavoastră.</li>
+              </ul>
+            </div>
+          </>
         ) : (
-          <div style={{ paddingTop: '20px', border: '1px solid rgba(255,255,255,0.1)', padding: '24px' }}>
-            <p className="text-xs tracking-[0.3em] uppercase" style={{ opacity: 0.6, marginBottom: '12px' }}>Transmission Confirmed</p>
-            <h2 className="text-xl font-light tracking-wide uppercase" style={{ marginBottom: '12px' }}>Return Request Received.</h2>
-            <p className="text-sm tracking-widest uppercase" style={{ opacity: 0.6 }}>Our support team will review your case and reply within 24–48 hours.</p>
-          </div>
+          <>
+            <h1 className="font-display text-2xl sm:text-3xl font-bold uppercase tracking-tight mb-3">
+              Refund &amp; Return Policy
+            </h1>
+            <p className="text-xs uppercase tracking-widest text-neutral-500 mb-8 font-mono">
+              In accordance with Romanian EU regulations (GEO 34/2014) // HAMANGIA STUDIO
+            </p>
+
+            <div className="h-px bg-neutral-800 my-8" />
+
+            <div className="space-y-6 text-sm text-neutral-300 leading-relaxed font-sans">
+              <p>
+                At <strong>HAMANGIA</strong>, we stand behind the durability and craft of our 240 GSM heavyweight garments. Under Romanian and EU consumer law, you have the right to withdraw from the contract within <strong>14 calendar days</strong> of receiving your goods.
+              </p>
+
+              <h2 className="text-base font-semibold uppercase tracking-wider text-white pt-4">
+                1. Eligibility for Returns
+              </h2>
+              <p>
+                To qualify for a full refund, items must be unworn, unwashed, unaltered, and returned in their original condition with all tags attached.
+              </p>
+
+              <h2 className="text-base font-semibold uppercase tracking-wider text-white pt-4">
+                2. How to Request a Return
+              </h2>
+              <p>
+                Please email our support team at{' '}
+                <a href="mailto:contact@hamangiastudio.ro" className="underline text-white hover:text-neutral-300">
+                  contact@hamangiastudio.ro
+                </a>{' '}
+                with your order number and request. We will provide full return shipment instructions.
+              </p>
+
+              <h2 className="text-base font-semibold uppercase tracking-wider text-white pt-4">
+                3. Refund Processing
+              </h2>
+              <p>
+                Refunds are processed within 14 calendar days following inspection of the returned garment, credited back to the original payment method or designated bank account.
+              </p>
+            </div>
+          </>
         )}
 
-        <div style={{ height: '1px', backgroundColor: '#333333', margin: '40px 0' }} />
+        <div className="h-px bg-neutral-800 my-10" />
 
-        <p style={{ marginTop: '40px', textAlign: 'center', opacity: 0.8, fontStyle: 'italic' }}>
-          HeavenlyNova<br />
-          Not Broken. Becoming.
-        </p>
+        <div className="text-center">
+          <Link
+            to="/drops"
+            className="inline-flex border border-neutral-700 bg-transparent px-6 py-2.5 text-xs font-semibold uppercase tracking-widest text-neutral-300 hover:border-white hover:text-white transition-colors"
+          >
+            {language === 'ro' ? '← Înapoi la Colecție' : '← Back to Collection'}
+          </Link>
+        </div>
       </div>
     </main>
   )

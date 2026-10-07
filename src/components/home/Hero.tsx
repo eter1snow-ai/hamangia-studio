@@ -1,6 +1,10 @@
 import { Link } from 'react-router-dom'
+import { useLanguage } from '../../context/LanguageContext'
 
 export default function Hero() {
+  const { language } = useLanguage()
+  const isRo = language === 'ro'
+
   return (
     <section
       id="hero"
@@ -35,11 +39,15 @@ export default function Hero() {
         </h1>
 
         <p className="mt-4 text-xs sm:text-sm uppercase tracking-[0.25em] text-neutral-400 font-mono">
-          ARHAIC &amp; DARK FOLKLORE STREETWEAR
+          {isRo ? 'ARHAIC & DARK FOLKLORE STREETWEAR' : 'ARCHAIC & DARK FOLKLORE STREETWEAR'}
         </p>
 
         <p className="mt-6 max-w-[560px] text-sm leading-relaxed text-neutral-300 md:text-base">
-          Atelier independent de creație textilă. Piese heavyweight 240 GSM cu croială boxy oversized, inspirate din gravură medievală și simetrii arhaice românești.
+          {isRo ? (
+            <>Atelier independent de creație textilă. Piese heavyweight 240 GSM cu croială boxy oversized, inspirate din gravură medievală și simetrii arhaice românești.</>
+          ) : (
+            <>Independent textile studio. Heavyweight 240 GSM pieces with a boxy oversized drape, inspired by medieval woodcut engraving and archaic Romanian symmetries.</>
+          )}
         </p>
 
         <div className="mt-8 flex flex-wrap items-center gap-4">
@@ -48,21 +56,21 @@ export default function Hero() {
             className="inline-flex border border-white bg-white px-8 py-3.5 text-xs font-semibold uppercase tracking-widest text-black transition-all hover:bg-transparent hover:text-white"
             style={{ borderRadius: 0 }}
           >
-            EXPLOREAZĂ COLECȚIA
+            {isRo ? 'EXPLOREAZĂ COLECȚIA' : 'EXPLORE COLLECTION'}
           </Link>
           <a
             href="#vitrina"
             className="inline-flex border border-white/30 bg-transparent px-8 py-3.5 text-xs font-semibold uppercase tracking-widest text-neutral-300 transition-all hover:border-white hover:text-white"
             style={{ borderRadius: 0 }}
           >
-            PIESA EROU (189 RON)
+            {isRo ? 'PIESA EROU (189 RON)' : 'HERO PIECE (189 RON)'}
           </a>
         </div>
 
-        <div className="mt-8 flex items-center gap-6 text-[11px] font-mono text-neutral-400 tracking-wider">
-          <span>✦ BUMBAC GREU 240 GSM</span>
-          <span>✦ PRINT DTF 300 DPI</span>
-          <span>✦ LIVRARE 24-48H EASYBOX</span>
+        <div className="mt-8 flex flex-wrap items-center gap-6 text-[11px] font-mono text-neutral-400 tracking-wider">
+          <span>✦ {isRo ? 'BUMBAC GREU 240 GSM' : '240 GSM HEAVYWEIGHT COTTON'}</span>
+          <span>✦ {isRo ? 'PRINT DTF 300 DPI' : '300 DPI DTF PRINT'}</span>
+          <span>✦ {isRo ? 'LIVRARE 24-48H EASYBOX' : '24-48H SAMEDAY DELIVERY'}</span>
         </div>
       </div>
     </section>

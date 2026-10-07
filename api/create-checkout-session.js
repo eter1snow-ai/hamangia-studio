@@ -1,55 +1,24 @@
 /**
  * api/create-checkout-session.js
  *
- * Vercel Serverless Function — Stripe Checkout Session (ES Module)
- *
- * Primeşte datele coşului de la frontend şi creează o sesiune de checkout Stripe.
- * Returnează sessionUrl către care frontend-ul redirectează utilizatorul.
+ * Vercel Serverless Function — Stripe Checkout Session (RON)
+ * Adaptat exclusiv pentru brandul HAMANGIA (hamangiastudio.ro).
  */
 
 import Stripe from 'stripe'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_placeholder')
 
-// ─── Catalogul de prețuri autorizate (server-side truth) ─────────────────────
-const AUTHORIZED_PRICES = {
-  'essentials-black':     4499,   // $44.99 în cenți
-  'essentials-white':     4499,   // $44.99
-  'essentials-skye-blue': 4499,   // $44.99
-  'core-hoodie-white':    7999,   // $79.99 (Core Hoodie — Black US)
-  'core-hoodie':          7999,   // $79.99
-  'soulfull-black':       5999,   // $59.99
-  'soulfull-white':       5999,   // $59.99
-  'soulfull-skye-blue':   5999,   // $59.99
-  'soulfull-hoodie':      9499,   // $94.99
-  'the-origin':           5999,   // $59.99
-  'broken-001':           5999,   // $59.99
-  'broken-hoodie':        9499,   // $94.99
-  'embrace-your-shadow':  5999,   // $59.99
-  'intergalactic-love-black': 5999, // $59.99
-  'intergalactic-love-white': 5999, // $59.99
-  'transcend-ego-black':  5999,   // $59.99
-  'transcend-hoodie':     9499,   // $94.99
-  'dragon-hoodie':        9499,   // $94.99
-  'intergalactic-hoodie': 9499,   // $94.99
-  'intergalactic-love-hoodie': 9499, // $94.99
-  'infinity-love-dragon': 5999,   // $59.99
+// ─── Catalogul de prețuri autorizate HAMANGIA (în bani RON) ───────────────────
+const AUTHORIZED_PRICES_RON = {
+  'cavalerul-woodcut':   18900,  // 189 RON
+  'chilim-cocos-white':  16900,  // 169 RON
+  'chilim-cocos-black':  16900,  // 169 RON
+  'angel-wings-black':   16900,  // 169 RON
+  'horizon-roots-tee':   14900,  // 149 RON
 }
 
-// ─── Piețe Tier 1 (US, CA, UK + Europa majoră & România) ──────────────────────
-// Asigură livrare rapidă (3–7 zile), producție locală și marjă protejată cu Free Shipping
-const TIER1_SHIPPING_COUNTRIES = [
-  'US', 'CA',                         // America de Nord (Fulfillment SUA)
-  'GB',                               // Marea Britanie
-  'RO',                               // România
-  'DE', 'FR', 'IT', 'ES', 'NL', 'BE', // Europa de Vest
-  'AT', 'CH', 'IE', 'LU', 'PT',       // Europa Centrală / Vest
-  'SE', 'DK', 'NO', 'FI',             // Scandinavia
-  'PL', 'CZ', 'SK', 'SI', 'HU', 'HR', 'GR', // Europa Centrală / Sud
-]
-
 export default async function handler(req, res) {
-  // CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
@@ -72,62 +41,51 @@ export default async function handler(req, res) {
       }
     }
 
-    const { cartLines, currency } = body || {}
-    const requestedCurrency = (typeof currency === 'string' && currency.toLowerCase() === 'eur') ? 'eur' : 'usd'
+    const { cartLines } = body || {}
 
-    // ─── Validare input ────────────────────────────────────────────────────────
     if (!cartLines || !Array.isArray(cartLines) || cartLines.length === 0) {
-      return res.status(400).json({ error: 'Invalid cart: cartLines must be a non-empty array.' })
+      return res.status(400).json({ error: 'Coș invalid: cartLines trebuie să conțină produse.' })
     }
 
-    // ─── Construire line_items cu prețuri validate server-side ─────────────────
     const lineItems = []
 
     for (const item of cartLines) {
-      const { productId, size, productTitle, quantity, imageUrl } = item
+      const { productId, size, quantity, productTitle, imageUrl } = item
 
-      // Validare câmpuri obligatorii
-      if (!productId || !size || !productTitle || !quantity) {
-        return res.status(400).json({ error: 'Invalid cart item: missing required fields.' })
+      if (!productId || !size || !quantity) {
+        return res.status(400).json({
+          error: `Linie de coș invalidă: ${JSON.stringify(item)}`,
+        })
       }
 
-      // Validare preț autorizat (anti-tamper)
-      const authorizedPriceUsdCents = AUTHORIZED_PRICES[productId]
-      if (!authorizedPriceUsdCents) {
-        return res.status(400).json({ error: `Unknown product: ${productId}` })
+      const authorizedPriceBani = AUTHORIZED_PRICES_RON[productId]
+      if (!authorizedPriceBani) {
+        return res.status(400).json({
+          error: `Produs necunoscut în catalogul HAMANGIA: "${productId}"`,
+        })
       }
 
-      // Stripe necesită URL-uri absolute valide pentru imagini
-      let validImageUrl = null
-      if (imageUrl && typeof imageUrl === 'string') {
-        const fullUrl = imageUrl.startsWith('http')
-          ? imageUrl
-          : `https://heavenlynova.com${imageUrl.startsWith('/') ? '' : '/'}${imageUrl}`
-        try {
-          validImageUrl = encodeURI(fullUrl)
-        } catch {
-          validImageUrl = null
-        }
-      }
+      const siteUrl = process.env.SITE_URL || 'https://hamangiastudio.ro'
+      const validImageUrl = imageUrl && imageUrl.startsWith('http')
+        ? imageUrl
+        : imageUrl && imageUrl.startsWith('/')
+          ? `${siteUrl}${imageUrl}`
+          : undefined
 
-      // Construim item-ul Stripe
-      const stripeItem = {
+      lineItems.push({
         price_data: {
-          currency: requestedCurrency,
+          currency: 'ron',
           product_data: {
-            name: `${productTitle} — ${size}`,
-            description: `Size: ${size}`,
+            name: `${productTitle || productId} — Mărime: ${size.toUpperCase()}`,
+            description: '240 GSM Heavyweight Cotton // HAMANGIA STUDIO',
             ...(validImageUrl ? { images: [validImageUrl] } : {}),
           },
-          unit_amount: authorizedPriceUsdCents,
+          unit_amount: authorizedPriceBani,
         },
         quantity: parseInt(quantity, 10),
-      }
-
-      lineItems.push(stripeItem)
+      })
     }
 
-    // ─── Construire metadata pentru webhook ────────────────────────────────────
     const orderItemsMetadata = JSON.stringify(
       cartLines.map((item) => ({
         productId: item.productId,
@@ -137,47 +95,40 @@ export default async function handler(req, res) {
       }))
     )
 
-    // ─── Creare sesiune Stripe Checkout ────────────────────────────────────────
+    const siteBase = process.env.SITE_URL || 'https://hamangiastudio.ro'
+
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
       payment_method_types: ['card'],
       line_items: lineItems,
 
-      // Colectare adresă de livrare de la client (Piețe Tier 1)
       shipping_address_collection: {
-        allowed_countries: TIER1_SHIPPING_COUNTRIES,
+        allowed_countries: ['RO'],
       },
 
-      // Opțiuni livrare afișate clientului (livrare gratuită conform politicii)
-      // Timpi aliniaţi cu Shipping Policy: intervalul total 4–13 zile (US min: 4zile, CA max: 13zile)
       shipping_options: [
         {
           shipping_rate_data: {
             type: 'fixed_amount',
-            fixed_amount: { amount: 0, currency: requestedCurrency },
-            display_name: 'Free Standard Shipping',
+            fixed_amount: { amount: 0, currency: 'ron' },
+            display_name: 'Livrare Gratuită (Sameday Easybox & Curier)',
             delivery_estimate: {
-              minimum: { unit: 'business_day', value: 4 },
-              maximum: { unit: 'business_day', value: 13 },
+              minimum: { unit: 'business_day', value: 1 },
+              maximum: { unit: 'business_day', value: 2 },
             },
           },
         },
       ],
 
-      // Colectare email client
       customer_creation: 'always',
 
-      // Metadata — trimise webhook-ului stripe-webhook.js
       metadata: {
-        hvn_order_items: orderItemsMetadata,
-        hvn_source: 'heavenlynova.com',
+        hamangia_order_items: orderItemsMetadata,
+        source: 'hamangiastudio.ro',
       },
 
-
-
-      // URL-uri redirect post-checkout
-      success_url: `${process.env.SITE_URL || 'https://heavenlynova.com'}/order-success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.SITE_URL || 'https://heavenlynova.com'}/`,
+      success_url: `${siteBase}/order-success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${siteBase}/`,
     })
 
     return res.status(200).json({ sessionUrl: session.url })
@@ -185,7 +136,7 @@ export default async function handler(req, res) {
   } catch (err) {
     console.error('[create-checkout-session] Error:', err)
     return res.status(500).json({
-      error: err.message || 'Internal server error. Please try again.',
+      error: err.message || 'Eroare internă la crearea sesiunii Stripe.',
     })
   }
 }

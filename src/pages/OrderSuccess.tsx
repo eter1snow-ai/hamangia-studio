@@ -1,25 +1,24 @@
 /**
  * src/pages/OrderSuccess.tsx
  *
- * Pagina de confirmare afișată după finalizarea plății pe Stripe.
- * Stripe redirecționează clientul la /order-success?session_id=cs_live_xxx
- *
- * Resetează coșul local și afișează mesajul de confirmare.
+ * Pagina de confirmare afișată după finalizarea plății pe Stripe sau înregistrarea comenzii cu Ramburs.
  */
 
 import { useEffect, useRef } from 'react'
 import { useSearchParams, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useCart } from '../components/cart/CartContext'
+import { useLanguage } from '../context/LanguageContext'
 import { trackPinterestCheckout } from '../lib/pinterest'
 
 export default function OrderSuccess() {
   const [searchParams] = useSearchParams()
   const sessionId = searchParams.get('session_id')
   const { resetCart } = useCart()
+  const { language } = useLanguage()
+  const isRo = language === 'ro'
   const trackedRef = useRef(false)
 
-  // Resetează coșul local și trimite evenimentul Checkout către Pinterest Tag & Meta Pixel
   useEffect(() => {
     resetCart()
 
@@ -37,7 +36,7 @@ export default function OrderSuccess() {
     }
 
     const value = typeof orderData?.value === 'number' ? orderData.value : 0
-    const currency = orderData?.currency || 'USD'
+    const currency = orderData?.currency || 'RON'
     const orderQuantity = typeof orderData?.orderQuantity === 'number' ? orderData.orderQuantity : 1
     const lineItems = Array.isArray(orderData?.lineItems) ? orderData.lineItems : []
 
@@ -63,7 +62,6 @@ export default function OrderSuccess() {
       })
     }
 
-    // Curățăm hn_pending_checkout pentru a nu refolosi comenzi vechi
     try {
       localStorage.removeItem('hn_pending_checkout')
     } catch {
@@ -72,7 +70,7 @@ export default function OrderSuccess() {
   }, [resetCart, sessionId])
 
   return (
-    <main className="bg-black text-white min-h-screen flex items-center justify-center px-6">
+    <main className="bg-black text-white min-h-screen flex items-center justify-center px-6 py-24">
       <motion.div
         initial={{ opacity: 0, y: 24 }}
         animate={{ opacity: 1, y: 0 }}
@@ -93,67 +91,79 @@ export default function OrderSuccess() {
               margin: '0 auto',
             }}
           >
-            <span style={{ fontSize: '1.2rem', color: '#888' }}>✓</span>
+            <span style={{ fontSize: '1.2rem', color: '#fff' }}>✓</span>
           </div>
         </div>
 
         {/* Brand */}
         <p
-          style={{ fontSize: '0.55rem', letterSpacing: '0.5em', color: '#333', lineHeight: 1.6 }}
-          className="uppercase mb-2"
+          style={{ fontSize: '0.65rem', letterSpacing: '0.45em', color: '#888', lineHeight: 1.6 }}
+          className="uppercase mb-2 font-mono"
         >
-          HeavenlyNova
+          HAMANGIA STUDIO
         </p>
 
         {/* Titlu */}
         <h1
-          style={{ fontSize: '1.1rem', fontWeight: 500, letterSpacing: '0.15em', color: '#E6E6E6' }}
+          style={{ fontSize: '1.4rem', fontWeight: 500, letterSpacing: '0.12em', color: '#E6E6E6' }}
           className="uppercase mb-4"
         >
-          Order Confirmed
+          {isRo ? 'Comandă Confirmată' : 'Order Confirmed'}
         </h1>
 
         {/* Mesaj */}
         <p
-          style={{ fontSize: '0.8rem', letterSpacing: '0.06em', color: '#666', lineHeight: 2 }}
+          style={{ fontSize: '0.85rem', letterSpacing: '0.04em', color: '#aaa', lineHeight: 2 }}
           className="mb-8"
         >
-          Your piece is in production.
-          <br />
-          A confirmation email will arrive shortly.
-          <br />
-          Estimated delivery: 4–13 business days.
+          {isRo ? (
+            <>
+              Piesa ta a intrat în pregătire în atelierul de print DTF.
+              <br />
+              Vei primi email de confirmare și numărul AWB Sameday.
+              <br />
+              <span className="font-mono text-neutral-400">Livrare estimată: 24–48 ore lucrătoare.</span>
+            </>
+          ) : (
+            <>
+              Your piece is in preparation in our local DTF print studio.
+              <br />
+              You will receive a confirmation email and Sameday AWB details.
+              <br />
+              <span className="font-mono text-neutral-400">Estimated delivery: 24–48 business hours.</span>
+            </>
+          )}
         </p>
 
         {/* Session ID pentru referință */}
         {sessionId && (
           <p
-            style={{ fontSize: '0.55rem', letterSpacing: '0.3em', color: '#2a2a2a', lineHeight: 1.6 }}
-            className="uppercase mb-8"
+            style={{ fontSize: '0.6rem', letterSpacing: '0.25em', color: '#555', lineHeight: 1.6 }}
+            className="uppercase mb-8 font-mono"
           >
-            Order ref: {sessionId.slice(-12).toUpperCase()}
+            Ref: {sessionId.slice(-12).toUpperCase()}
           </p>
         )}
 
         {/* Divider */}
-        <div style={{ width: '40px', height: '1px', backgroundColor: '#222', margin: '0 auto 32px' }} />
+        <div style={{ width: '40px', height: '1px', backgroundColor: '#333', margin: '0 auto 32px' }} />
 
         {/* CTA */}
         <Link
           to="/drops"
           style={{
             display: 'inline-block',
-            fontSize: '0.65rem',
-            letterSpacing: '0.35em',
-            color: '#555',
+            fontSize: '0.7rem',
+            letterSpacing: '0.3em',
+            color: '#fff',
             textDecoration: 'none',
-            borderBottom: '1px solid #222',
-            paddingBottom: '2px',
-            transition: 'color 0.2s',
+            border: '1px solid #444',
+            padding: '10px 24px',
+            transition: 'all 0.2s',
           }}
-          className="uppercase hover:text-white"
+          className="uppercase hover:bg-white hover:text-black hover:border-white font-mono"
         >
-          Continue Exploring
+          {isRo ? 'Continuă să Explorezi' : 'Continue Exploring'}
         </Link>
       </motion.div>
     </main>

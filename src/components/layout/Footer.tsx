@@ -63,8 +63,8 @@ export default function Footer() {
             </h3>
             <nav style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <Link to="/drops" style={{ fontSize: '0.82rem', fontWeight: 300, letterSpacing: '0.1em', lineHeight: 1.6, color: '#C2C2C2' }} className="uppercase hover:text-white transition-colors">{t('nav.drops')}</Link>
-              <Link to="/heritage" style={{ fontSize: '0.82rem', fontWeight: 300, letterSpacing: '0.1em', lineHeight: 1.6, color: '#C2C2C2' }} className="uppercase hover:text-white transition-colors">{t('nav.heritage')}</Link>
-              <Link to="/seraphim" style={{ fontSize: '0.82rem', fontWeight: 300, letterSpacing: '0.1em', lineHeight: 1.6, color: '#C2C2C2' }} className="uppercase hover:text-white transition-colors">{t('nav.seraphim')}</Link>
+              <Link to="/roots" style={{ fontSize: '0.82rem', fontWeight: 300, letterSpacing: '0.1em', lineHeight: 1.6, color: '#C2C2C2' }} className="uppercase hover:text-white transition-colors">{t('nav.roots')}</Link>
+              <Link to="/essentials" style={{ fontSize: '0.82rem', fontWeight: 300, letterSpacing: '0.1em', lineHeight: 1.6, color: '#C2C2C2' }} className="uppercase hover:text-white transition-colors">{t('nav.essentials')}</Link>
               <Link to="/join" style={{ fontSize: '0.82rem', fontWeight: 300, letterSpacing: '0.1em', lineHeight: 1.6, color: '#C2C2C2' }} className="uppercase hover:text-white transition-colors">{t('nav.join')}</Link>
             </nav>
           </div>
@@ -75,12 +75,9 @@ export default function Footer() {
               {t('footer.social', 'Social')}
             </h3>
             <nav style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <a href="https://www.instagram.com/heavenlynovastreetwear" target="_blank" rel="noopener noreferrer" style={{ fontSize: '0.82rem', fontWeight: 300, letterSpacing: '0.1em', lineHeight: 1.6, color: '#C2C2C2' }} className="uppercase hover:text-white transition-colors">Instagram →</a>
-              {/* TikTok hidden until the page has more content/followers. Restore:
-              <a href="https://www.tiktok.com/@heavenlynova.studio" target="_blank" rel="noopener noreferrer" style={{ fontSize: '0.82rem', fontWeight: 300, letterSpacing: '0.1em', lineHeight: 1.6, color: '#C2C2C2' }} className="uppercase hover:text-white transition-colors">TikTok →</a> */}
-              <a href="https://www.facebook.com/HeavenlyNovaOfficial" target="_blank" rel="noopener noreferrer" style={{ fontSize: '0.82rem', fontWeight: 300, letterSpacing: '0.1em', lineHeight: 1.6, color: '#C2C2C2' }} className="uppercase hover:text-white transition-colors">Facebook →</a>
-              <a href="https://ro.pinterest.com/HeavenlynovaStreetwear/" target="_blank" rel="noopener noreferrer" style={{ fontSize: '0.82rem', fontWeight: 300, letterSpacing: '0.1em', lineHeight: 1.6, color: '#C2C2C2' }} className="uppercase hover:text-white transition-colors">Pinterest →</a>
-              <Link to="/story" style={{ fontSize: '0.82rem', fontWeight: 300, letterSpacing: '0.1em', lineHeight: 1.6 }} className="uppercase text-white hover:text-white transition-colors">{t('footer.origin', '— THE ORIGIN —')}</Link>
+              <a href="https://www.instagram.com/hamangiastudio" target="_blank" rel="noopener noreferrer" style={{ fontSize: '0.82rem', fontWeight: 300, letterSpacing: '0.1em', lineHeight: 1.6, color: '#C2C2C2' }} className="uppercase hover:text-white transition-colors">Instagram →</a>
+              <a href="https://www.facebook.com/hamangiastudio" target="_blank" rel="noopener noreferrer" style={{ fontSize: '0.82rem', fontWeight: 300, letterSpacing: '0.1em', lineHeight: 1.6, color: '#C2C2C2' }} className="uppercase hover:text-white transition-colors">Facebook →</a>
+              <Link to="/story" style={{ fontSize: '0.82rem', fontWeight: 300, letterSpacing: '0.1em', lineHeight: 1.6 }} className="uppercase text-white hover:text-white transition-colors">{t('footer.origin', '— ROOTS —')}</Link>
             </nav>
           </div>
         </div>
@@ -93,9 +90,9 @@ export default function Footer() {
               {t('footer.atelier_dispatch', 'Made to Order')}
             </span>
             <span className="text-neutral-700 hidden sm:inline">•</span>
-            <span>{t('footer.shipping_territories', 'Free Shipping: USA, Canada, UK & Europe')}</span>
+            <span>{t('footer.shipping_territories', 'Livrare în toată România')}</span>
             <span className="text-neutral-700 hidden sm:inline">•</span>
-            <span className="text-neutral-500">{t('footer.shipping_estimate', 'Tracked 4–13 Business Days')}</span>
+            <span className="text-neutral-500">{t('footer.shipping_estimate', 'Sameday Easybox & Curier 24-48h')}</span>
           </div>
           <Link
             to="/shipping-policy"

@@ -29,8 +29,8 @@ export default function VibeSection() {
           </video>
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
           <div className="absolute inset-0 flex items-center justify-center">
-            <h2 className="font-display text-5xl md:text-6xl lg:text-7xl uppercase tracking-[0.5em] opacity-90">
-              HEAVENLY NOVA
+            <h2 className="font-display text-4xl md:text-6xl lg:text-7xl uppercase tracking-[0.4em] opacity-90 text-center px-4">
+              HAMANGIA
             </h2>
           </div>
         </div>

@@ -20,69 +20,25 @@ import { trackPinterestPageVisit, trackPinterestAddToCart } from '../lib/pintere
 // Restul folosesc fallback generic din datele produsului.
 
 const PRODUCT_SEO_OVERRIDES: Record<string, { title: string; description: string }> = {
-  'the-origin': {
-    title: 'The Origin Piece — Chapter 000 Tee | HeavenlyNova',
-    description: 'Shop The Origin Piece, Chapter 000 — The First Signal. Heavyweight cotton tee from HeavenlyNova.',
+  'cavalerul-woodcut': {
+    title: 'Cavalerul / Sf. Gheorghe (Woodcut Heavy Tee) — HAMANGIA',
+    description: 'Piesa erou HAMANGIA. Tricou heavyweight 240 GSM din bumbac masiv cu gravură medievală în lemn și print DTF de înaltă definiție.',
   },
-  'broken-001': {
-    title: 'BROKEN // 001 — Seraphim Tee | HeavenlyNova',
-    description: 'BROKEN // 001. Not everything that breaks is meant to stay broken. 255 GSM heavyweight cotton tee from HeavenlyNova.',
+  'chilim-cocos-white': {
+    title: 'Chilim Geometric Cocos - Vintage White — HAMANGIA',
+    description: 'Tricou oversized 240g din bumbac greu cu motive de chilim tradițional românesc pe nuanță fildeș vintage.',
   },
-  'broken-hoodie': {
-    title: 'BROKEN HOODIE — Seraphim Fleece (10 oz) | HeavenlyNova',
-    description: 'The architectural heavy fleece of the Seraphim collection. Fractured wings reverse, subtle left-chest insignia. 340 GSM heavyweight 3-end fleece.',
+  'chilim-cocos-black': {
+    title: 'Chilim Geometric Cocos - Washed Black — HAMANGIA',
+    description: 'Simetrie arhaică și geometrie ritualică pe negru spălat. Bumbac greu 240 GSM pre-shrunk, croială boxy.',
   },
-  'soulfull-black': {
-    title: 'SOULFULL — Black Heavyweight Tee (7.5oz) | HeavenlyNova',
-    description: 'Not everything needs to be loud to be felt. Soulfull is a quiet statement forged from heavyweight 255 GSM cotton. Part of the Heritage Collection.',
+  'angel-wings-black': {
+    title: 'Angel Wings - Oversized Black — HAMANGIA',
+    description: 'Aripi heraldice gravate pe bumbac heavyweight 240 GSM. Print DTF de înaltă definiție la 300 DPI.',
   },
-  'soulfull-white': {
-    title: 'SOULFULL White — Heavyweight Tee (7.5oz) | HeavenlyNova',
-    description: 'Archival black seraphim ink across pristine chalk-white 255 GSM heavyweight cotton. Part of the Heritage Collection.',
-  },
-  'soulfull-skye-blue': {
-    title: 'SOULFULL Skye Blue — Heavyweight Tee (7.5oz) | HeavenlyNova',
-    description: 'Ethereal Skye Blue wash with contrast black seraphim ink on 255 GSM heavyweight cotton. Part of the Heritage Collection.',
-  },
-  'essentials-skye-blue': {
-    title: 'ESSENTIALS Skye Blue — Minimal Heavyweight Tee (7.5oz) | HeavenlyNova',
-    description: 'Subtle Nova insignia embroidered chest detail on washed Skye Blue heavyweight cotton. Part of the Essentials Line.',
-  },
-  'soulfull-hoodie': {
-    title: 'SOULFULL Hoodie | Heritage Line | HeavenlyNova',
-    description: 'SOULFULL Hoodie. Part of the Heritage Line. 350 GSM heavyweight organic cotton. Structured silhouette.',
-  },
-  'embrace-your-shadow': {
-    title: 'Embrace Your Shadow — Heritage Artifact 002 | HeavenlyNova',
-    description: 'Embrace Your Shadow Tee — Artifact 002. Exploring psychological duality and the unseen self. 255 GSM heavyweight combed cotton by HeavenlyNova.',
-  },
-  'intergalactic-love-black': {
-    title: 'INTERGALACTIC LOVE — Deep Black Heavyweight Tee | HeavenlyNova',
-    description: 'Statement 003 — Deep Black. An expansive orbital dialogue rendered in high-density stark ink. 255 GSM heavyweight cotton by HeavenlyNova.',
-  },
-  'intergalactic-love-white': {
-    title: 'INTERGALACTIC LOVE — Chalk White Heavyweight Tee | HeavenlyNova',
-    description: 'Statement 003 — Chalk White. Celestial geometry and calm monumental presence. 255 GSM heavyweight cotton by HeavenlyNova.',
-  },
-  'intergalactic-hoodie': {
-    title: 'INTERGALACTIC Hoodie — Heavyweight Streetwear (10 oz) | HeavenlyNova',
-    description: 'Statement 003 — An expansive orbital dialogue rendered in heavyweight 340 GSM 3-end fleece by HeavenlyNova.',
-  },
-  'transcend-ego-black': {
-    title: 'TRANSCEND EGO — Deep Black Heavyweight Tee | HeavenlyNova',
-    description: 'Statement 004 — Beyond the boundary of ego lies the architecture of the infinite. 255 GSM heavyweight combed cotton by HeavenlyNova.',
-  },
-  'transcend-hoodie': {
-    title: 'TRANSCEND Hoodie — Heavyweight Streetwear (10 oz) | HeavenlyNova',
-    description: 'Statement 004 — Beyond the boundary of ego lies the architecture of the infinite. 340 GSM heavyweight 3-end fleece by HeavenlyNova.',
-  },
-  'dragon-hoodie': {
-    title: 'DRAGON Hoodie — Heavyweight Streetwear (10 oz) | HeavenlyNova',
-    description: 'Statement 005 — Eternal cycles bound by celestial devotion. 340 GSM heavyweight 3-end fleece showstopper by HeavenlyNova.',
-  },
-  'infinity-love-dragon': {
-    title: 'INFINITY LOVE // DRAGON — Deep Black Heavyweight Tee | HeavenlyNova',
-    description: 'Statement 005 — Eternal cycles bound by celestial devotion. 255 GSM heavyweight combed cotton showstopper by HeavenlyNova.',
+  'horizon-roots-tee': {
+    title: 'Horizon Roots Tee — HAMANGIA',
+    description: 'Piesă dedicată reîntoarcerii la rădăcini. 240 GSM heavy cotton, croială boxy oversized.',
   },
 }
 
@@ -301,8 +257,6 @@ export default function ProductDetail() {
     )
   }
 
-  const isSeraphim = product.category === 'flagship'
-
   return (
     <main className="bg-black text-white">
       <motion.section
@@ -387,8 +341,8 @@ export default function ProductDetail() {
                         zoomFactor={2.8}
                       />
                     </div>
-                    <p className="mt-3 text-[10px] uppercase tracking-widest text-neutral-500 text-center">
-                      Hover to zoom • {/neck/i.test(neckSelected) ? 'Neck label detail' : 'Fabric & construction detail'}
+                    <p className="mt-3 text-[10px] uppercase font-mono tracking-widest text-neutral-500 text-center">
+                      {language === 'ro' ? 'Treci cu mouse-ul pentru zoom • Detalii material & construcție' : 'Hover to zoom • Fabric & construction detail'}
                     </p>
                   </div>
                 )}
@@ -405,18 +359,12 @@ export default function ProductDetail() {
             <div>
               {(() => {
                 const localMock = localDrops.find((m) => m.id === product.id || m.id === productId)
-                const displayTitle = product.id === 'broken-hoodie' ? 'BROKEN HOODIE' : isSeraphim ? 'Seraphim' : (localMock?.name || product.name)
+                const displayTitle = localMock?.name || product.name
                 const displayTagline = localized?.tagline || localMock?.tagline || product.tagline
 
                 return (
                   <>
-                    <h1
-                      className={
-                        isSeraphim
-                          ? 'font-serif text-2xl sm:text-3xl font-semibold leading-tight tracking-tight'
-                          : 'font-display text-2xl sm:text-3xl font-semibold leading-tight tracking-tight'
-                      }
-                    >
+                    <h1 className="font-display text-2xl sm:text-3xl font-semibold leading-tight tracking-tight">
                       {displayTitle}
                     </h1>
                     {displayTagline && (
@@ -567,11 +515,9 @@ export default function ProductDetail() {
               {isLoading ? t('product.adding') : showSizeError ? t('product.select_size') : t('product.claim')}
             </button>
 
-            {!((localized?.description || product.description).includes('Part of the HeavenlyNova universe')) && (
-              <p style={{ fontSize: '0.62rem', letterSpacing: '0.3em', color: '#333333', lineHeight: 1.6 }} className="uppercase">
-                {t('product.universe')}
-              </p>
-            )}
+            <p style={{ fontSize: '0.62rem', letterSpacing: '0.3em', color: '#666666', lineHeight: 1.6 }} className="uppercase font-mono">
+              {t('product.universe')}
+            </p>
 
             <p className="text-sm md:text-base text-neutral-300 leading-relaxed max-w-[90%] md:max-w-none whitespace-pre-wrap">{localized?.description || product.description}</p>
           </div>

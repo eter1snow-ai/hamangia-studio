@@ -9,12 +9,11 @@ export default function Story() {
   const { language } = useLanguage()
   const s = STORY_TRANSLATIONS[language] || STORY_TRANSLATIONS.en
 
-  const backImage = '/Assets/Images/Preview/The Origin Piece/The Origin Piece Back.webp'
-  const frontImage = '/Assets/Images/Preview/The Origin Piece/Original Esentials Black Front.webp'
+  const backImage = '/Assets/Images/Hamangia/cavalerul-woodcut.png'
+  const frontImage = '/Assets/Images/Hamangia/cavalerul-woodcut.png'
 
   useEffect(() => {
     window.scrollTo(0, 0);
-    console.log('✅ THE ORIGIN PIECE section ready');
   }, []);
 
   return (
@@ -25,13 +24,13 @@ export default function Story() {
           className="absolute inset-0 h-full w-full bg-black"
         >
           <img
-            src="/Assets/Images/Heavenly story of Nova.webp"
-            alt="HeavenlyNova Origin"
-            className="h-full w-full object-cover opacity-90"
+            src="/Assets/Images/Hamangia/cavalerul-woodcut.png"
+            alt="HAMANGIA Origin"
+            className="h-full w-full object-contain sm:object-cover opacity-40 mix-blend-screen"
             style={{ 
               borderRadius: 0,
               objectPosition: 'center 43%',                                                                
-              filter: 'contrast(1.2) saturate(0.8) brightness(0.9)',
+              filter: 'grayscale(100%) contrast(1.4) brightness(0.9)',
               maskImage: 'linear-gradient(to bottom, black 40%, transparent 95%)',
               WebkitMaskImage: 'linear-gradient(to bottom, black 40%, transparent 95%)'
             }}
@@ -163,7 +162,7 @@ export default function Story() {
           <div className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr] items-stretch">
             <div 
               className="relative overflow-hidden border border-neutral-800 bg-neutral-950 cursor-pointer group"
-              onClick={() => navigate('/product/the-origin')}
+              onClick={() => navigate('/product/cavalerul-woodcut')}
             >
               <div className="w-full bg-neutral-900 relative flex items-center justify-center" style={{ aspectRatio: '2044/2000' }}>
                 <img 
@@ -199,7 +198,7 @@ export default function Story() {
               </div>
               <div>
                 <button
-                  onClick={() => navigate('/product/the-origin')}
+                  onClick={() => navigate('/product/cavalerul-woodcut')}
                   className="inline-flex items-center border border-white/40 bg-transparent px-6 py-3 text-xs font-semibold uppercase tracking-[0.24em] text-white transition-soft hover:border-white hover:bg-white hover:text-black"
                   style={{ borderRadius: 0 }}
                 >

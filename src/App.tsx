@@ -6,7 +6,6 @@ import Heritage from './pages/Heritage'
 import Essentials from './pages/Essentials'
 import Join from './pages/Join'
 import Contact from './pages/Contact'
-import Seraphim from './pages/Seraphim'
 import NotFound from './pages/NotFound'
 import { CartProvider } from './components/cart/CartContext'
 import { CurrencyProvider } from './context/CurrencyContext'
@@ -41,75 +40,74 @@ const ROUTE_SEO: Record<string, Parameters<typeof applySEO>[0]> = {
   },
   '/drops': {
     path: '/drops',
-    title: 'Drops & Core Capsules | HeavenlyNova',
-    description: 'Core capsules in rotation. Chapter /000 — Heavyweight streetwear artifacts built to last. Calm in presence, strong in identity.',
+    title: 'Colecția Arhaică // Drop 01 | HAMANGIA',
+    description: 'Piese din bumbac greu de 240 GSM. Gravură medievală și simetrii neolitice românești.',
+  },
+  '/roots': {
+    path: '/roots',
+    title: 'To the Roots — Colecția Arhaică | HAMANGIA',
+    description: 'Piese din bumbac greu de 240g inspirate din gravură medievală și folclor arhaic românesc.',
   },
   '/heritage': {
     path: '/heritage',
-    title: 'Heritage Line — The First Constellations | HeavenlyNova',
-    description: 'Emerging from raw, instinctive designs. Artifacts shaped by shadow and clarity, struggle and awakening. Discover the Soulfull collection and the original constellations.',
+    title: 'To the Roots — Colecția Arhaică | HAMANGIA',
+    description: 'Piese din bumbac greu de 240g inspirate din gravură medievală și folclor arhaic românesc.',
   },
   '/essentials': {
     path: '/essentials',
-    title: 'Essentials Collection — Architectural Streetwear | HeavenlyNova',
-    description: 'Minimal silhouettes. Heavyweight feel. Everyday luxury cut from high-density cotton.',
+    title: 'Esențiale // Chilimuri Geometrice | HAMANGIA',
+    description: 'Simetrii geometrice arhaice extrase din vechile chilimuri. Bumbac heavyweight 240 GSM.',
   },
   '/story': {
     path: '/story',
-    title: 'The Origin Story — Chapter 000 | HeavenlyNova',
-    description: 'Those who reach the end carry the first symbol. Discover the origin of HeavenlyNova — Chapter 000, The First Signal.',
+    title: 'Povestea Originii — Atelier Hamangia | HAMANGIA',
+    description: 'Originea brandului HAMANGIA — tăcerea pietrei neolitice și rigoarea xilogravurii medievale.',
   },
   '/join': {
     path: '/join',
-    title: 'Join — Exclusive Access | HeavenlyNova',
-    description: 'Be among the first to receive exclusive drops, lore fragments, and early access to what comes next. Join HeavenlyNova.',
+    title: 'Comunitate & Acces Exclusiv | HAMANGIA',
+    description: 'Fii primul informat despre tirajele scurte de atelier și noile drop-uri HAMANGIA.',
   },
   '/contact': {
     path: '/contact',
-    title: 'Contact Us | HeavenlyNova',
-    description: 'Get in touch with the HeavenlyNova team for inquiries, order support, and collaborations.',
+    title: 'Contact Atelier | HAMANGIA',
+    description: 'Ia legătura cu echipa atelierului HAMANGIA Studio pentru comenzi sau asistență.',
   },
   '/track-order': {
     path: '/track-order',
-    title: 'Track Your Order | HeavenlyNova',
-    description: 'Follow the path of your pieces. Check tracking details and fulfillment updates for HeavenlyNova orders.',
-  },
-  '/seraphim': {
-    path: '/seraphim',
-    title: 'Seraphim — Chapter /001 | HeavenlyNova',
-    description: 'Seraphim — The First Ascension. Chapter /001 of the HeavenlyNova universe.',
-    noindex: true,
+    title: 'Urmărește Comanda | HAMANGIA',
+    description: 'Verifică statusul livrării Sameday Easybox sau curier pentru comanda ta.',
   },
   '/privacy-policy': {
     path: '/privacy-policy',
-    title: 'Privacy Policy | HeavenlyNova',
-    description: 'HeavenlyNova privacy policy — how we collect and use your data.',
+    title: 'Politică de Confidențialitate | HAMANGIA',
+    description: 'Politica de confidențialitate și protecție a datelor GDPR — HAMANGIA STUDIO.',
   },
   '/terms-of-service': {
     path: '/terms-of-service',
-    title: 'Terms of Service | HeavenlyNova',
-    description: 'HeavenlyNova terms of service.',
+    title: 'Termeni și Condiții | HAMANGIA',
+    description: 'Termenii și condițiile de vânzare ale atelierului HAMANGIA STUDIO.',
   },
   '/shipping-policy': {
     path: '/shipping-policy',
-    title: 'Shipping Policy | HeavenlyNova',
-    description: 'HeavenlyNova shipping policy — delivery times, regions and rates.',
+    title: 'Politică de Livrare | HAMANGIA',
+    description: 'Informații complete despre livrarea rapidă 24-48h prin Sameday Easybox și curier în România.',
   },
   '/refund-policy': {
     path: '/refund-policy',
-    title: 'Refund Policy | HeavenlyNova',
-    description: 'HeavenlyNova refund and returns policy.',
+    title: 'Politică de Retur | HAMANGIA',
+    description: 'Dreptul de retur în 14 zile calendaristice conform OUG 34/2014 — HAMANGIA STUDIO.',
   },
   '/order-success': {
     path: '/order-success',
-    title: 'Order Confirmed | HeavenlyNova',
-    description: 'Your HeavenlyNova piece is in production.',
+    title: 'Comandă Confirmată | HAMANGIA',
+    description: 'Piesa ta HAMANGIA a intrat în producție.',
     noindex: true,
   },
   '/success': {
     path: '/success',
-    title: 'Order Confirmed | HeavenlyNova',
-    description: 'Your HeavenlyNova piece is in production.',
+    title: 'Comandă Confirmată | HAMANGIA',
+    description: 'Piesa ta HAMANGIA a intrat în producție.',
     noindex: true,
   },
 }
@@ -179,11 +177,12 @@ function AnimatedRoutes() {
         <Route path="/" element={<MotionPage><Home /></MotionPage>} />
         <Route path="/drops" element={<MotionPage><Drops /></MotionPage>} />
         <Route path="/story" element={<MotionPage><Story /></MotionPage>} />
+        <Route path="/roots" element={<MotionPage><Heritage /></MotionPage>} />
         <Route path="/heritage" element={<MotionPage><Heritage /></MotionPage>} />
         <Route path="/essentials" element={<MotionPage><Essentials /></MotionPage>} />
         <Route path="/join" element={<MotionPage><Join /></MotionPage>} />
         <Route path="/contact" element={<MotionPage><Contact /></MotionPage>} />
-        <Route path="/seraphim" element={<MotionPage><Seraphim /></MotionPage>} />
+        <Route path="/seraphim" element={<MotionPage><Drops /></MotionPage>} />
         <Route path="/privacy-policy" element={<MotionPage><PrivacyPolicy /></MotionPage>} />
         <Route path="/terms-of-service" element={<MotionPage><TermsOfService /></MotionPage>} />
         <Route path="/shipping-policy" element={<MotionPage><ShippingPolicy /></MotionPage>} />

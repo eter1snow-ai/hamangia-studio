@@ -1,7 +1,6 @@
 import { useEffect, useState, useRef } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useCart } from '../cart/CartContext'
-import { useCurrency } from '../../context/CurrencyContext'
 import { useLanguage } from '../../context/LanguageContext'
 
 export default function Navbar() {
@@ -13,11 +12,8 @@ export default function Navbar() {
   const navigate = useNavigate()
   const location = useLocation()
   const { openCart, itemCount } = useCart()
-  const { currency, setCurrency } = useCurrency()
   const { language, setLanguage, languages, t } = useLanguage()
   const isJoinPage = location.pathname === '/join'
-
-
 
   const handleDropsFilter = (type?: string, collection?: string) => {
     setOpen(false)
@@ -38,7 +34,10 @@ export default function Navbar() {
   useEffect(() => {
     const mql = window.matchMedia('(min-width: 768px)')
     const init = () => setIsDesktop(mql.matches)
-    const handler = (e: MediaQueryListEvent) => { setIsDesktop(e.matches); if (e.matches) setOpen(false) }
+    const handler = (e: MediaQueryListEvent) => {
+      setIsDesktop(e.matches)
+      if (e.matches) setOpen(false)
+    }
     init()
     mql.addEventListener('change', handler)
     return () => mql.removeEventListener('change', handler)
@@ -54,159 +53,216 @@ export default function Navbar() {
     return () => document.removeEventListener('mousedown', handler)
   }, [])
 
-  const linkClass = `text-sm font-medium uppercase tracking-widest transition-soft cursor-pointer ${
-    isJoinPage ? 'text-white/20 hover:text-white/40' : 'text-white hover:text-white/70'
+  const linkClass = `text-xs font-semibold uppercase tracking-widest transition-soft cursor-pointer ${
+    isJoinPage ? 'text-white/20 hover:text-white/40' : 'text-neutral-300 hover:text-white'
   }`
 
   return (
     <>
-
-
-      <header className={`fixed top-0 left-0 right-0 z-50 ${isJoinPage ? 'bg-transparent border-transparent' : `border-b border-neutral-800 ${scrolled ? 'bg-black/90 backdrop-blur-md' : 'bg-black/70 backdrop-blur-sm'}`}`}>
+      <header
+        className={`fixed top-0 left-0 right-0 z-50 ${
+          isJoinPage
+            ? 'bg-transparent border-transparent'
+            : `border-b border-neutral-800 ${scrolled ? 'bg-black/95 backdrop-blur-md' : 'bg-black/80 backdrop-blur-sm'}`
+        }`}
+      >
         {!isJoinPage && (
           <aside
             aria-label="Announcement"
             className="w-full border-b border-white/[0.08] bg-[#070707]/95 px-4 py-1.5 text-center select-none"
           >
-            <p className="font-mono text-[9.5px] sm:text-[10.5px] uppercase tracking-[0.22em] text-neutral-400">
-              <span className="text-white/40 mr-2">✦</span>
-              <span className="text-neutral-300 font-medium">{t('nav.announcement')}</span>
-              <span className="text-white/40 ml-2">✦</span>
+            <p className="font-mono text-[9.5px] sm:text-[10.5px] uppercase tracking-[0.22em] text-neutral-300">
+              {t('nav.announcement')}
             </p>
           </aside>
         )}
         <nav className="mx-auto flex max-w-[1300px] items-center justify-between px-6 py-4 lg:px-12">
-          <Link to="/" className="font-display text-sm font-semibold uppercase tracking-widest text-white transition-soft hover:text-white/70">
+          {/* Logo Brand */}
+          <Link
+            to="/"
+            className="font-display text-sm sm:text-base font-bold uppercase tracking-[0.2em] text-white transition-soft hover:text-neutral-300"
+          >
             HAMANGIA
           </Link>
-
-
 
           <div className="flex items-center gap-4 md:gap-8">
             <div className="hidden md:flex items-center gap-8">
               <ul className="flex gap-6 lg:gap-8 list-none items-center">
-              <li>
-                <span className={linkClass} onClick={() => handleDropsFilter()}>{t('nav.drops')}</span>
-              </li>
-              <li>
-                <span className={linkClass} onClick={() => navigate('/heritage')}>{t('nav.heritage')}</span>
-              </li>
-              <li>
-                <span className={linkClass} onClick={() => { setOpen(false); navigate('/essentials') }}>{t('nav.essentials')}</span>
-              </li>
-              <li>
-                <span className={linkClass} onClick={() => { setOpen(false); navigate('/seraphim') }}>{t('nav.seraphim')}</span>
-              </li>
+                <li>
+                  <span className={linkClass} onClick={() => handleDropsFilter()}>
+                    {t('nav.drops')}
+                  </span>
+                </li>
+                <li>
+                  <span className={linkClass} onClick={() => navigate('/roots')}>
+                    {t('nav.roots')}
+                  </span>
+                </li>
+                <li>
+                  <span
+                    className={linkClass}
+                    onClick={() => {
+                      setOpen(false)
+                      navigate('/essentials')
+                    }}
+                  >
+                    {t('nav.essentials')}
+                  </span>
+                </li>
+                <li>
+                  <span
+                    className={linkClass}
+                    onClick={() => {
+                      setOpen(false)
+                      navigate('/story')
+                    }}
+                  >
+                    {t('nav.story')}
+                  </span>
+                </li>
 
-              {/* Collections Dropdown */}
-              <li ref={collectionsRef} className="relative">
-                <span
-                  className={`${linkClass} flex items-center gap-1`}
-                  onClick={() => setCollectionsOpen(!collectionsOpen)}
-                >
-                  {t('nav.collections')}
-                  <svg className={`w-3 h-3 transition-transform ${collectionsOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
+                {/* Collections Dropdown */}
+                <li ref={collectionsRef} className="relative">
+                  <span
+                    className={`${linkClass} flex items-center gap-1`}
+                    onClick={() => setCollectionsOpen(!collectionsOpen)}
+                  >
+                    {t('nav.collections')}
+                    <svg
+                      className={`w-3 h-3 transition-transform ${collectionsOpen ? 'rotate-180' : ''}`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </span>
+                  {collectionsOpen && (
+                    <div className="absolute top-full left-0 mt-2 w-48 bg-neutral-950 border border-white/10 py-2 z-50 shadow-2xl">
+                      {[
+                        {
+                          label: 'To the Roots (Drop 01)',
+                          action: () => {
+                            setCollectionsOpen(false)
+                            navigate('/roots')
+                          },
+                        },
+                        {
+                          label: language === 'ro' ? 'Esențiale' : 'Essentials',
+                          action: () => {
+                            setCollectionsOpen(false)
+                            navigate('/essentials')
+                          },
+                        },
+                        {
+                          label: language === 'ro' ? 'Toate Piesele' : 'All Drops',
+                          action: () => {
+                            setCollectionsOpen(false)
+                            navigate('/drops')
+                          },
+                        },
+                      ].map((item) => (
+                        <button
+                          key={item.label}
+                          onClick={item.action}
+                          className="block w-full text-left px-4 py-2 text-xs uppercase tracking-widest text-neutral-400 hover:text-white hover:bg-white/5 transition-colors font-mono"
+                        >
+                          {item.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </li>
+              </ul>
+            </div>
+
+            {/* Language Switcher (RO | EN Only) */}
+            <div className="flex items-center text-[10px] tracking-[0.14em] uppercase font-mono border border-neutral-800 bg-neutral-950 px-2.5 py-1">
+              {languages.map((l, i) => (
+                <span key={l.code} className="flex items-center">
+                  {i > 0 && <span className="mx-1.5 text-neutral-700">|</span>}
+                  <button
+                    onClick={() => setLanguage(l.code)}
+                    className={`transition-colors cursor-pointer ${
+                      language === l.code ? 'text-white font-bold underline underline-offset-4' : 'text-neutral-500 hover:text-neutral-300'
+                    }`}
+                    title={l.label}
+                  >
+                    {l.code.toUpperCase()}
+                  </button>
                 </span>
-                {collectionsOpen && (
-                  <div className="absolute top-full left-0 mt-2 w-40 bg-black border border-white/10 py-2 z-50">
-                    {[
-                      { label: 'Heritage', action: () => { setCollectionsOpen(false); navigate('/heritage') } },
-                      { label: 'Essentials', action: () => { setCollectionsOpen(false); navigate('/essentials') } },
-                      { label: 'Seraphim', action: () => { setCollectionsOpen(false); navigate('/seraphim') } },
-                    ].map((item) => (
-                      <button
-                        key={item.label}
-                        onClick={item.action}
-                        className="block w-full text-left px-4 py-2 text-xs uppercase tracking-widest text-white/60 hover:text-white hover:bg-white/5 transition-colors"
-                      >
-                        {item.label}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </li>
-            </ul>
-          </div>
-          
-          {/* Language Switcher (Desktop) */}
-          <div className="hidden lg:flex items-center text-[10px] tracking-[0.12em] uppercase font-mono border border-neutral-800 bg-neutral-950/80 px-2 py-1">
-            {languages.map((l, i) => (
-              <span key={l.code} className="flex items-center">
-                {i > 0 && <span className="mx-1 text-neutral-700">·</span>}
-                <button
-                  onClick={() => setLanguage(l.code)}
-                  className={`transition-colors ${language === l.code ? 'text-white font-bold' : 'text-neutral-500 hover:text-neutral-300'}`}
-                  title={l.label}
-                >
-                  {l.code.toUpperCase()}
-                </button>
-              </span>
-            ))}
-          </div>
+              ))}
+            </div>
 
-          {/* Currency Switcher (Desktop & Tablet) */}
-          <div className="hidden sm:flex items-center text-[10px] tracking-[0.2em] uppercase font-mono border border-neutral-800 bg-neutral-950/80 px-2 py-1">
-            <button
-              onClick={() => setCurrency('USD')}
-              className={`transition-colors ${currency === 'USD' ? 'text-white font-bold' : 'text-neutral-500 hover:text-neutral-300'}`}
-              title="United States Dollar ($)"
-            >
-              USD $
-            </button>
-            <span className="mx-1.5 text-neutral-700">|</span>
-            <button
-              onClick={() => setCurrency('EUR')}
-              className={`transition-colors ${currency === 'EUR' ? 'text-white font-bold' : 'text-neutral-500 hover:text-neutral-300'}`}
-              title="Euro (€)"
-            >
-              EUR €
-            </button>
-          </div>
+            {/* Currency Indicator (RON) */}
+            <div className="hidden sm:flex items-center text-[10px] tracking-[0.15em] uppercase font-mono border border-neutral-800 bg-neutral-950 px-2 py-1 text-neutral-300 font-bold">
+              RON
+            </div>
 
-          {/* Cart Icon */}
-          <button
-            onClick={openCart}
-            className={`relative flex items-center justify-center transition-soft ${isJoinPage ? 'text-white/40 hover:text-white/60' : 'text-white hover:text-white/70'}`}
-            aria-label="Open cart"
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <path d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-            </svg>
-            {itemCount > 0 && (
-              <span className="absolute -top-1 -right-2 flex h-4 w-4 items-center justify-center rounded-full bg-white text-[9px] font-bold text-black">
-                {itemCount}
-              </span>
+            {/* Cart Icon */}
+            <button
+              onClick={openCart}
+              className={`relative flex items-center justify-center transition-soft ${
+                isJoinPage ? 'text-white/40 hover:text-white/60' : 'text-white hover:text-neutral-300'
+              }`}
+              aria-label="Open cart"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <path d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+              </svg>
+              {itemCount > 0 && (
+                <span className="absolute -top-1 -right-2 flex h-4 w-4 items-center justify-center rounded-full bg-white text-[9px] font-bold text-black">
+                  {itemCount}
+                </span>
+              )}
+            </button>
+
+            {/* Mobile Toggle */}
+            {!isDesktop && (
+              <button
+                aria-label="Toggle menu"
+                onClick={() => setOpen(!open)}
+                className={`inline-flex items-center justify-center border px-3 py-2 text-xs font-medium uppercase tracking-[0.16em] text-white transition-soft ml-2 ${
+                  isJoinPage ? 'border-white/20 hover:bg-white/10' : 'border-neutral-700 hover:bg-neutral-900'
+                }`}
+              >
+                {open ? (language === 'ro' ? 'Închide' : 'Close') : 'Meniu'}
+              </button>
             )}
-          </button>
-          
-          {/* Mobile Toggle */}
-          {!isDesktop && (
-            <button
-              aria-label="Toggle menu"
-              onClick={() => setOpen(!open)}
-              className={`inline-flex items-center justify-center border px-3 py-2 text-xs font-medium uppercase tracking-[0.16em] text-white transition-soft ml-2 ${isJoinPage ? 'border-white/20 hover:bg-white/10' : 'border-neutral-700 hover:bg-neutral-900'}`}
-            >
-              {open ? 'Close' : 'Menu'}
-            </button>
-          )}
-        </div>
+          </div>
         </nav>
 
         {/* Mobile Menu */}
         {open && !isDesktop && (
-          <div className="md:hidden border-t border-neutral-800">
-            <ul className="space-y-2 px-6 py-4 list-none">
+          <div className="md:hidden border-t border-neutral-800 bg-black/95 px-6 py-6 backdrop-blur-md">
+            <ul className="space-y-4 list-none">
               {[
-                { label: t('nav.drops', 'Drops'), action: () => handleDropsFilter() },
-                { label: t('nav.heritage', 'Heritage'), action: () => { setOpen(false); navigate('/heritage') } },
-                { label: t('nav.essentials', 'Essentials'), action: () => { setOpen(false); navigate('/essentials') } },
-                { label: t('nav.seraphim', 'Seraphim'), action: () => { setOpen(false); navigate('/seraphim') } },
+                { label: t('nav.drops'), action: () => handleDropsFilter() },
+                {
+                  label: t('nav.roots'),
+                  action: () => {
+                    setOpen(false)
+                    navigate('/roots')
+                  },
+                },
+                {
+                  label: t('nav.essentials'),
+                  action: () => {
+                    setOpen(false)
+                    navigate('/essentials')
+                  },
+                },
+                {
+                  label: t('nav.story'),
+                  action: () => {
+                    setOpen(false)
+                    navigate('/story')
+                  },
+                },
               ].map((item) => (
                 <li key={item.label}>
                   <span
-                    className="block text-sm font-medium uppercase tracking-widest text-white cursor-pointer hover:text-white/70 transition-colors"
+                    className="block text-sm font-semibold uppercase tracking-widest text-neutral-300 cursor-pointer hover:text-white transition-colors"
                     onClick={item.action}
                   >
                     {item.label}
@@ -214,37 +270,19 @@ export default function Navbar() {
                 </li>
               ))}
 
-              {/* Mobile Currency Switcher */}
-              <li className="pt-3 mt-1 border-t border-neutral-800/60 flex items-center justify-between">
-                <span className="text-[10px] uppercase tracking-widest text-neutral-500">Currency</span>
-                <div className="flex items-center text-[10px] tracking-[0.15em] uppercase font-mono border border-neutral-800 bg-neutral-950 px-2 py-1">
-                  <button
-                    onClick={() => setCurrency('USD')}
-                    className={`transition-colors ${currency === 'USD' ? 'text-white font-bold' : 'text-neutral-500 hover:text-neutral-300'}`}
-                  >
-                    USD $
-                  </button>
-                  <span className="mx-1.5 text-neutral-700">|</span>
-                  <button
-                    onClick={() => setCurrency('EUR')}
-                    className={`transition-colors ${currency === 'EUR' ? 'text-white font-bold' : 'text-neutral-500 hover:text-neutral-300'}`}
-                  >
-                    EUR €
-                  </button>
-                </div>
-              </li>
-
-              {/* Mobile Language Switcher */}
-              <li className="pt-2 flex items-center justify-between">
-                <span className="text-[10px] uppercase tracking-widest text-neutral-500">Language</span>
-                <div className="flex items-center text-[10px] tracking-[0.12em] uppercase font-mono border border-neutral-800 bg-neutral-950 px-2 py-1">
+              <li className="pt-4 border-t border-neutral-800 flex items-center justify-between">
+                <span className="text-xs uppercase tracking-widest text-neutral-500 font-mono">
+                  {language === 'ro' ? 'Limbă' : 'Language'}
+                </span>
+                <div className="flex items-center text-xs tracking-wider uppercase font-mono border border-neutral-800 bg-neutral-950 px-3 py-1">
                   {languages.map((l, i) => (
                     <span key={l.code} className="flex items-center">
-                      {i > 0 && <span className="mx-1 text-neutral-700">·</span>}
+                      {i > 0 && <span className="mx-2 text-neutral-700">|</span>}
                       <button
                         onClick={() => setLanguage(l.code)}
-                        className={`transition-colors ${language === l.code ? 'text-white font-bold' : 'text-neutral-500 hover:text-neutral-300'}`}
-                        title={l.label}
+                        className={`transition-colors ${
+                          language === l.code ? 'text-white font-bold underline' : 'text-neutral-500'
+                        }`}
                       >
                         {l.code.toUpperCase()}
                       </button>
@@ -259,4 +297,3 @@ export default function Navbar() {
     </>
   )
 }
-

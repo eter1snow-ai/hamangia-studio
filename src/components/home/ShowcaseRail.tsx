@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import type { Product } from '../../data/drops'
 import ProductCard from '../shared/ProductCard'
+import { useLanguage } from '../../context/LanguageContext'
 
 type Props = {
   products: Product[]
@@ -13,6 +14,8 @@ export default function ShowcaseRail({ products }: Props) {
   const [isPaused, setIsPaused] = useState(false)
   const isInteractingRef = useRef(false)
   const resumeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const { language } = useLanguage()
+  const isRo = language === 'ro'
 
   // Duplicăm lista pentru loop infinit fără întrerupere vizuală
   const displayItems = [...products, ...products]
@@ -29,14 +32,12 @@ export default function ShowcaseRail({ products }: Props) {
       if (!isPaused && !isInteractingRef.current && container) {
         scrollPos += speed
 
-        // Când am parcurs prima jumătate a listei duplicate, resetăm insesizabil la început
         const halfWidth = container.scrollWidth / 2
         if (scrollPos >= halfWidth) {
           scrollPos -= halfWidth
         }
         container.scrollLeft = scrollPos
       } else if (container) {
-        // Sincronizăm poziția când utilizatorul dă scroll manual sau pauză
         scrollPos = container.scrollLeft
       }
       animationFrameId = requestAnimationFrame(step)
@@ -60,7 +61,6 @@ export default function ShowcaseRail({ products }: Props) {
       behavior: 'smooth',
     })
 
-    // Reluăm auto-scroll după 3 secunde de la click
     resumeTimeoutRef.current = setTimeout(() => {
       isInteractingRef.current = false
     }, 3000)
@@ -79,7 +79,7 @@ export default function ShowcaseRail({ products }: Props) {
   }
 
   return (
-    <section id="heritage" className="bg-black text-white py-16 sm:py-24 overflow-hidden relative border-b border-white/5">
+    <section id="roots-rail" className="bg-black text-white py-16 sm:py-24 overflow-hidden relative border-b border-white/5">
       {/* Header Secțiune */}
       <div className="mx-auto w-full max-w-[1300px] px-6 lg:px-12 mb-8 sm:mb-12">
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6">
@@ -91,9 +91,9 @@ export default function ShowcaseRail({ products }: Props) {
           >
             <p
               style={{ fontSize: '0.65rem', letterSpacing: '0.45em', color: '#888888', lineHeight: 1.6 }}
-              className="uppercase mb-2"
+              className="uppercase mb-2 font-mono"
             >
-              STATEMENT SERIES
+              {isRo ? 'DROP 01 // SERIE ARHAICĂ' : 'DROP 01 // STATEMENT SERIES'}
             </p>
             <h2
               style={{
@@ -103,15 +103,19 @@ export default function ShowcaseRail({ products }: Props) {
                 lineHeight: 1.2,
                 color: '#E6E6E6',
               }}
-              className="uppercase mb-3"
+              className="uppercase mb-3 font-display"
             >
-              Curated Editions
+              {isRo ? 'Ediții Limitate de Atelier' : 'Curated Studio Editions'}
             </h2>
             <p
               style={{ fontSize: '0.82rem', letterSpacing: '0.15em', lineHeight: 1.8, color: '#A8A8A8' }}
               className="max-w-[540px]"
             >
-              Heavyweight architectural silhouettes. Forged in silence, worn with presence.
+              {isRo ? (
+                <>Siluete arhitecturale din bumbac greu de 240 GSM. Gravură medievală, chilimuri tradiționale și cădere boxy oversized.</>
+              ) : (
+                <>Architectural heavyweight 240 GSM silhouettes. Medieval woodcut motifs, archaic geometries, and boxy oversized drape.</>
+              )}
             </p>
           </motion.div>
 
@@ -136,11 +140,11 @@ export default function ShowcaseRail({ products }: Props) {
               </button>
             </div>
             <Link
-              to="/heritage"
-              className="inline-flex items-center border border-white/20 bg-transparent px-4 py-2 text-[10px] uppercase tracking-[0.25em] text-neutral-300 transition-colors hover:border-white hover:text-white"
+              to="/roots"
+              className="inline-flex items-center border border-white/20 bg-transparent px-4 py-2 text-[10px] uppercase tracking-[0.25em] text-neutral-300 transition-colors hover:border-white hover:text-white font-mono"
               style={{ borderRadius: 0 }}
             >
-              All Pieces [{products.length}]
+              {isRo ? `Toate Piesele [${products.length}]` : `All Pieces [${products.length}]`}
             </Link>
           </div>
         </div>
@@ -148,7 +152,6 @@ export default function ShowcaseRail({ products }: Props) {
 
       {/* Horizontal Rail Container cu Gradient Fades */}
       <div className="relative w-full">
-        {/* Fades stânga & dreapta pentru tranziție cosmică curată */}
         <div className="pointer-events-none absolute left-0 top-0 bottom-0 w-8 sm:w-20 bg-gradient-to-r from-black via-black/80 to-transparent z-10" />
         <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-8 sm:w-20 bg-gradient-to-l from-black via-black/80 to-transparent z-10" />
 

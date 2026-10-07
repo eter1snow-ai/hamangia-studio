@@ -15,7 +15,8 @@ export default function CartDrawer() {
     checkoutError,
   } = useCart()
   const { formatPrice } = useCurrency()
-  const { t } = useLanguage()
+  const { language, t } = useLanguage()
+  const isRo = language === 'ro'
 
   const subtotalNumeric = cartState.lines.reduce((acc, l) => acc + l.priceUsd * l.quantity, 0)
 
@@ -45,8 +46,8 @@ export default function CartDrawer() {
             {/* Header */}
             <div className="flex items-center justify-between px-6 py-5" style={{ borderBottom: '1px solid #1a1a1a' }}>
               <div>
-                <p style={{ fontSize: '0.6rem', letterSpacing: '0.45em', color: '#555', lineHeight: 1.6 }} className="uppercase mb-1">
-                  HAMANGIA
+                <p style={{ fontSize: '0.6rem', letterSpacing: '0.45em', color: '#555', lineHeight: 1.6 }} className="uppercase mb-1 font-mono">
+                  HAMANGIA STUDIO
                 </p>
                 <h2 style={{ fontSize: '0.85rem', fontWeight: 500, letterSpacing: '0.2em', color: '#E6E6E6' }} className="uppercase">
                   {t('cart.title')}
@@ -54,7 +55,7 @@ export default function CartDrawer() {
               </div>
               <button
                 onClick={closeCart}
-                style={{ fontSize: '1.2rem', color: '#555', lineHeight: 1 }}
+                style={{ fontSize: '1.2rem', color: '#888', lineHeight: 1 }}
                 className="hover:text-white transition-colors"
                 aria-label="Close cart"
               >
@@ -66,17 +67,17 @@ export default function CartDrawer() {
             <div className="flex-1 overflow-y-auto px-6 py-8">
               {cartState.lines.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full text-center" style={{ gap: '16px' }}>
-                  <p style={{ fontSize: '0.65rem', letterSpacing: '0.4em', color: '#333', lineHeight: 1.6 }} className="uppercase">
+                  <p style={{ fontSize: '0.75rem', letterSpacing: '0.3em', color: '#888', lineHeight: 1.6 }} className="uppercase font-mono">
                     {t('cart.empty')}
                   </p>
-                  <p style={{ fontSize: '0.7rem', letterSpacing: '0.2em', color: '#2a2a2a', lineHeight: 1.6 }} className="uppercase">
-                    Add a piece to begin.
+                  <p style={{ fontSize: '0.7rem', letterSpacing: '0.15em', color: '#555', lineHeight: 1.6 }} className="uppercase">
+                    {isRo ? 'Adaugă o piesă din colecție pentru a începe.' : 'Add a piece from the collection to begin.'}
                   </p>
                 </div>
               ) : (
                 <div className="flex flex-col gap-6">
                   {cartState.lines.map((item) => (
-                    <div key={item.lineId} className="flex gap-4">
+                    <div key={item.lineId} className="flex gap-4 border-b border-neutral-900 pb-4">
                       <div className="w-20 h-24 bg-neutral-900 overflow-hidden shrink-0">
                         {item.imageUrl ? (
                           <img src={item.imageUrl} alt={item.productTitle} className="w-full h-full object-cover" />
@@ -87,7 +88,7 @@ export default function CartDrawer() {
                       <div className="flex flex-col flex-1 justify-between">
                         <div>
                           <div className="flex justify-between items-start">
-                            <h3 style={{ fontSize: '0.75rem', fontWeight: 600, letterSpacing: '0.15em' }} className="uppercase text-white">
+                            <h3 style={{ fontSize: '0.75rem', fontWeight: 600, letterSpacing: '0.1em' }} className="uppercase text-white">
                               {item.productTitle}
                             </h3>
                             <button
@@ -99,8 +100,8 @@ export default function CartDrawer() {
                               ✕
                             </button>
                           </div>
-                          <p style={{ fontSize: '0.65rem', letterSpacing: '0.1em', color: '#888', marginTop: '4px' }} className="uppercase">
-                            Size: {item.size}
+                          <p style={{ fontSize: '0.65rem', letterSpacing: '0.1em', color: '#888', marginTop: '4px' }} className="uppercase font-mono">
+                            {isRo ? 'Mărime' : 'Size'}: {item.size}
                           </p>
                         </div>
                         <div className="flex justify-between items-center mt-4">
@@ -121,7 +122,7 @@ export default function CartDrawer() {
                               +
                             </button>
                           </div>
-                          <p style={{ fontSize: '0.75rem', letterSpacing: '0.1em' }} className="text-white">
+                          <p style={{ fontSize: '0.75rem', letterSpacing: '0.1em' }} className="text-white font-mono">
                             {formatPrice(item.priceUsd)}
                           </p>
                         </div>
@@ -136,17 +137,16 @@ export default function CartDrawer() {
             {cartState.lines.length > 0 && (
               <div className="px-6 py-6" style={{ borderTop: '1px solid #1a1a1a' }}>
                 <div className="flex justify-between items-center mb-5">
-                  <p style={{ fontSize: '0.65rem', letterSpacing: '0.3em', color: '#555' }} className="uppercase">
+                  <p style={{ fontSize: '0.65rem', letterSpacing: '0.3em', color: '#888' }} className="uppercase font-mono">
                     {t('cart.subtotal')}
                   </p>
-                  <p style={{ fontSize: '0.85rem', fontWeight: 500, letterSpacing: '0.1em', color: '#E6E6E6' }}>
+                  <p style={{ fontSize: '0.95rem', fontWeight: 600, letterSpacing: '0.1em', color: '#E6E6E6' }} className="font-mono">
                     {formatPrice(subtotalNumeric)}
                   </p>
                 </div>
 
-                {/* Eroare checkout */}
                 {checkoutError && (
-                  <p style={{ fontSize: '0.6rem', letterSpacing: '0.15em', color: '#ef4444', marginBottom: '10px', textAlign: 'center', lineHeight: 1.6 }}>
+                  <p style={{ fontSize: '0.65rem', letterSpacing: '0.1em', color: '#ef4444', marginBottom: '10px', textAlign: 'center', lineHeight: 1.6 }}>
                     {checkoutError}
                   </p>
                 )}
@@ -155,13 +155,13 @@ export default function CartDrawer() {
                   onClick={checkout}
                   disabled={isLoading}
                   className={`w-full bg-white text-black uppercase transition-colors ${isLoading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-neutral-200'}`}
-                  style={{ fontSize: '0.7rem', fontWeight: 600, letterSpacing: '0.3em', padding: '14px', borderRadius: 0 }}
+                  style={{ fontSize: '0.7rem', fontWeight: 600, letterSpacing: '0.25em', padding: '14px', borderRadius: 0 }}
                 >
-                  {isLoading ? 'REDIRECTING...' : t('cart.checkout')}
+                  {isLoading ? (isRo ? 'SE REDIRECȚIONEAZĂ...' : 'REDIRECTING...') : t('cart.checkout')}
                 </button>
 
-                <p style={{ fontSize: '0.6rem', letterSpacing: '0.25em', color: '#333', marginTop: '12px', textAlign: 'center' }} className="uppercase">
-                  Secure checkout · Powered by Stripe
+                <p style={{ fontSize: '0.6rem', letterSpacing: '0.15em', color: '#555', marginTop: '12px', textAlign: 'center' }} className="uppercase font-mono">
+                  {isRo ? 'Checkout Securizat · Plată Card & Ramburs (Easybox)' : 'Secure checkout · Card & Cash on Delivery (Easybox)'}
                 </p>
               </div>
             )}

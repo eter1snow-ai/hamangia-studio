@@ -13,7 +13,9 @@ export default function Essentials() {
   useEffect(() => {
     window.scrollTo(0, 0)
     // Update SEO tags dynamically
-    document.title = "Essentials | Core Collection | HeavenlyNova"
+    document.title = language === 'ro' 
+      ? 'Esențiale | Colecția Arhaică | HAMANGIA' 
+      : 'Essentials | Archaic Collection | HAMANGIA'
     
     // Update canonical link
     let canonical = document.querySelector("link[rel='canonical']") as HTMLLinkElement
@@ -22,8 +24,8 @@ export default function Essentials() {
       canonical.rel = 'canonical'
       document.head.appendChild(canonical)
     }
-    canonical.href = "https://heavenlynova.com/essentials"
-  }, [])
+    canonical.href = "https://hamangiastudio.ro/essentials"
+  }, [language])
 
   return (
     <main className="bg-black text-white min-h-screen">

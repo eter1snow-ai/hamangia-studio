@@ -1,9 +1,12 @@
 import { motion } from 'framer-motion'
 import { useEffect, useState } from 'react'
+import { useLanguage } from '../context/LanguageContext'
 import './Join.css'
 
 export default function Join() {
   useEffect(() => { window.scrollTo(0, 0) }, [])
+  const { language } = useLanguage()
+  const isRo = language === 'ro'
 
   const [email, setEmail] = useState('')
   const [sent, setSent] = useState(false)
@@ -27,30 +30,37 @@ export default function Join() {
 
   return (
     <main className="relative min-h-screen w-full bg-black text-white flex items-center justify-center overflow-hidden">
-      {/* Background Image */}
+      {/* Background Graphic */}
       <img
-        className="absolute inset-0 w-full h-full object-cover opacity-40 join-bg-image"
-        src="/Assets/Images/The Ascent/pexels-zak-mogel-2158251013-35758424.webp"
-        alt="The Ascent"
+        className="absolute inset-0 w-full h-full object-cover opacity-25"
+        src="/Assets/Images/Hamangia/cavalerul-woodcut.png"
+        alt="HAMANGIA Dark Woodcut"
+        style={{ filter: 'grayscale(100%) contrast(150%)' }}
       />
       
       {/* Dark overlay */}
-      <div className="absolute inset-0 bg-black/30 sm:bg-black/50"></div>
+      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/80 to-black/60 pointer-events-none" />
 
       {/* Content */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8 }}
-        className="relative z-10 max-w-md w-full px-6"
+        className="relative z-10 max-w-md w-full px-6 py-20"
       >
         <div className="text-center mb-10">
-          <p className="uppercase mb-5" style={{ fontSize: '0.65rem', letterSpacing: '0.5em', lineHeight: 1.6, color: '#aaaaaa' }}>Between Light & Shadow.</p>
-          <h1 className="uppercase mb-5" style={{ fontSize: '2rem', fontWeight: 500, letterSpacing: '0.12em', lineHeight: 1.5, color: '#E6E6E6' }}>
-            The Heritage Line<br />is Live.
+          <p className="uppercase mb-4 font-mono text-[10px] tracking-[0.45em] text-neutral-400">
+            {isRo ? 'ACCES EXCLUSIV // MEMBRI' : 'MEMBERS ONLY // PRIVATE TRANSMISSION'}
+          </p>
+          <h1 className="uppercase mb-4 font-display text-3xl sm:text-4xl font-semibold tracking-tight text-white">
+            {isRo ? 'Drop 01 // Lansare Arhaică' : 'Drop 01 // Archaic Release'}
           </h1>
-          <p className="uppercase" style={{ fontSize: '0.75rem', letterSpacing: '0.35em', lineHeight: 1.8, color: '#888888' }}>
-            Be among the first to receive exclusive drops,<br />lore fragments, and early access to what comes next.
+          <p className="text-xs sm:text-sm text-neutral-400 leading-relaxed max-w-sm mx-auto">
+            {isRo ? (
+              <>Fii primul informat despre tirajele scurte de atelier, mostrele unice de gravură și accesul anticipat la fiecare piesă nouă.</>
+            ) : (
+              <>Receive private notifications for limited studio runs, woodcut artifacts, and priority access prior to public release.</>
+            )}
           </p>
         </div>
 
@@ -59,33 +69,40 @@ export default function Join() {
             <form onSubmit={handleSubmit} className="space-y-4">
               <input
                 type="email"
-                placeholder="ENTER YOUR EMAIL"
+                placeholder={isRo ? 'INTRODUCETI ADRESA DE EMAIL' : 'ENTER YOUR EMAIL'}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full bg-black/80 border border-white/40 text-white text-xs tracking-wide px-4 py-4 focus:border-white focus:outline-none transition-colors"
+                className="w-full bg-black/80 border border-neutral-700 text-white text-xs tracking-wider px-4 py-3.5 focus:border-white focus:outline-none transition-colors"
                 style={{ borderRadius: 0 }}
               />
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-white text-black text-xs tracking-[0.2em] px-6 py-4 uppercase font-semibold hover:bg-white/90 transition-colors"
+                className="w-full bg-white text-black text-xs tracking-[0.25em] px-6 py-3.5 uppercase font-semibold hover:bg-neutral-200 transition-colors"
                 style={{ borderRadius: 0, opacity: loading ? 0.7 : 1 }}
               >
-                {loading ? '...' : 'INITIATE'}
+                {loading ? (isRo ? 'SE ÎNREGISTREAZĂ...' : 'INITIATING...') : (isRo ? 'SOLICITĂ ACCES PRIORITAR' : 'REQUEST EARLY ACCESS')}
               </button>
             </form>
           </div>
         ) : (
-          <div className="text-center py-4">
-            <p className="uppercase tracking-[0.3em] text-white/80" style={{ fontSize: '0.8rem', lineHeight: 1.8 }}>
-              Your request is under review<br />by the Keepers.
+          <div className="text-center py-6 border border-neutral-800 bg-neutral-950 p-6">
+            <p className="text-xs font-mono uppercase tracking-[0.2em] text-neutral-300 mb-2">
+              {isRo ? '✦ Solicitare Înregistrată' : '✦ Allocation Confirmed'}
+            </p>
+            <p className="text-xs text-neutral-400 leading-relaxed">
+              {isRo ? (
+                <>Ai fost adăugat pe lista privată a atelierului HAMANGIA. Vei primi primul transmisiunile noastre.</>
+              ) : (
+                <>You have been added to the private HAMANGIA allocation list. Watch for incoming signals.</>
+              )}
             </p>
           </div>
         )}
 
-        <p className="text-[10px] uppercase tracking-widest text-white/30 mt-6 text-center">
-          We respect your privacy. Unsubscribe anytime.
+        <p className="text-[10px] uppercase font-mono tracking-widest text-neutral-600 mt-6 text-center">
+          {isRo ? 'Protecție strictă GDPR. Zero Spam. Dezabonare facilă.' : 'Strict privacy. Zero spam. Unsubscribe anytime.'}
         </p>
       </motion.div>
     </main>
