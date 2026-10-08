@@ -27,6 +27,18 @@ export default async function handler(req, res) {
       return res.status(200).json({ received: true, ignored: true })
     }
 
+    // 1. Verificare rapidă în payload-ul primit: dacă este destinat altui proiect (ex: reziliere-contracte.ro), ignorăm imediat
+    const rawTo = Array.isArray(data?.to) ? data.to : (data?.to ? [data.to] : [])
+    if (rawTo.length > 0) {
+      const isForHamangiaInitial = rawTo.some(addr => 
+        typeof addr === 'string' && addr.toLowerCase().includes('hamangiastudio.ro')
+      )
+      if (!isForHamangiaInitial) {
+        console.log(`ℹ️ [Inbound] Email ignorat (aparține altui proiect): ${rawTo.join(', ')}`)
+        return res.status(200).json({ received: true, ignored: true, reason: 'not_for_hamangia' })
+      }
+    }
+
     // Preluăm detaliile complete ale emailului recepționat
     const emailDetails = await resend.emails.receiving.get(emailId)
 
@@ -36,8 +48,37 @@ export default async function handler(req, res) {
     }
 
     const { from, subject, text, html, attachments, to } = emailDetails.data || emailDetails
+    const receivedFor = emailDetails.data?.received_for || []
 
-    console.log(`📩 [Inbound] Email recepționat de la: ${from} | Subiect: ${subject} | Către: ${to}`)
+    // 2. Verificare strictă pe to și received_for: acceptăm EXCLUSIV emailuri pentru hamangiastudio.ro
+    const allRecipients = [
+      ...(Array.isArray(to) ? to : (to ? [to] : [])),
+      ...(Array.isArray(receivedFor) ? receivedFor : (receivedFor ? [receivedFor] : []))
+    ]
+
+    const isStrictlyHamangia = allRecipients.some(addr => 
+      typeof addr === 'string' && addr.toLowerCase().includes('hamangiastudio.ro')
+    )
+
+    if (!isStrictlyHamangia) {
+      console.log(`ℹ️ [Inbound] Email ignorat după fetch (aparține altui proiect): ${allRecipients.join(', ')}`)
+      return res.status(200).json({ received: true, ignored: true, reason: 'not_for_hamangia' })
+    }
+
+    // 3. Ignorăm rapoarte automate DMARC de la servere (Google, Yahoo etc.) pentru a nu polua inbox-ul
+    const subjectLower = (subject || '').toLowerCase()
+    const fromLower = (from || '').toLowerCase()
+    if (
+      subjectLower.includes('report domain:') ||
+      subjectLower.includes('dmarc') ||
+      fromLower.includes('dmarc') ||
+      fromLower.includes('noreply-dmarc')
+    ) {
+      console.log(`ℹ️ [Inbound] Raport automat DMARC ignorat: ${subject}`)
+      return res.status(200).json({ received: true, ignored: true, reason: 'dmarc_report' })
+    }
+
+    console.log(`📩 [Inbound] Email legitim HAMANGIA de la: ${from} | Subiect: ${subject}`)
 
     // Pregătim corpul de trimis către Gmail
     const notificationEmail = process.env.NOTIFICATION_EMAIL || 'eter1snow@gmail.com'
